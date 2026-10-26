@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: nightowl-api
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build --workspace=server
+    startCommand: npm run start --workspace=server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: NightOwl <onboarding@resend.dev>
+      - key: COLLEGE_EMAIL_DOMAIN
+        value: sst.scaler.com

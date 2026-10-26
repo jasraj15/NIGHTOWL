@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="owlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A2542" />
+      <stop offset="100%" stop-color="#0B0F19" />
+    </linearGradient>
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#CCFF00" />
+      <stop offset="80%" stop-color="#A6E22E" />
+      <stop offset="100%" stop-color="#80B300" />
+    </radialGradient>
+  </defs>
+  <!-- Night Moon Crescent in Background -->
+  <path d="M 50 5 A 45 45 0 0 0 85 80 A 38 38 0 1 1 50 5 Z" fill="#223055" opacity="0.4" />
+  
+  <!-- Owl Body -->
+  <path d="M 25 45 C 25 22 75 22 75 45 C 75 75 68 88 50 88 C 32 88 25 75 25 45 Z" fill="url(#owlGrad)" stroke="#324578" stroke-width="2.5" />
+  
+  <!-- Owl Ear Tufts -->
+  <polygon points="28,32 20,16 38,26" fill="#1A2542" stroke="#324578" stroke-width="2" />
+  <polygon points="72,32 80,16 62,26" fill="#1A2542" stroke="#324578" stroke-width="2" />
+
+  <!-- Big Glowing Eyes -->
+  <circle cx="38" cy="46" r="13" fill="#0B0F19" stroke="#324578" stroke-width="2" />
+  <circle cx="62" cy="46" r="13" fill="#0B0F19" stroke="#324578" stroke-width="2" />
+  
+  <circle cx="38" cy="46" r="9" fill="url(#eyeGlow)" />
+  <circle cx="62" cy="46" r="9" fill="url(#eyeGlow)" />
+
+  <!-- Pupils (looking forward/alert) -->
+  <circle cx="39" cy="45" r="4.5" fill="#060911" />
+  <circle cx="63" cy="45" r="4.5" fill="#060911" />
+  <circle cx="41" cy="43" r="1.5" fill="#FFFFFF" />
+  <circle cx="65" cy="43" r="1.5" fill="#FFFFFF" />
+
+  <!-- Beak -->
+  <polygon points="50,53 45,61 55,61" fill="#FFB347" />
+
+  <!-- Wings line details -->
+  <path d="M 27 52 Q 35 70 42 78" stroke="#324578" stroke-width="2" fill="none" stroke-linecap="round" />
+  <path d="M 73 52 Q 65 70 58 78" stroke="#324578" stroke-width="2" fill="none" stroke-linecap="round" />
+</svg>
