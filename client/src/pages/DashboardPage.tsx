@@ -108,7 +108,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
       {/* Greeting + summary */}
-      <section className="card relative overflow-hidden p-6 sm:p-8">
+      <section className="card night-sky relative overflow-hidden p-6 sm:p-8">
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-lime">
@@ -124,13 +124,14 @@ export const DashboardPage: React.FC = () => {
           </Link>
         </div>
         <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Active orders" value={mine.loading ? '…' : activeOrders.length} to="/orders" />
-          <Stat label="Pools created" value={stats.loading ? '…' : stats.data?.stats.poolsCreated ?? 0} to="/orders?tab=created" />
-          <Stat label="Completed" value={stats.loading ? '…' : stats.data?.stats.poolsCompleted ?? 0} to="/orders?tab=completed" />
+          <Stat label="Active orders" value={mine.loading ? '…' : activeOrders.length} to="/orders" className="bg-sun" />
+          <Stat label="Pools created" value={stats.loading ? '…' : stats.data?.stats.poolsCreated ?? 0} to="/orders?tab=created" className="bg-blush" />
+          <Stat label="Completed" value={stats.loading ? '…' : stats.data?.stats.poolsCompleted ?? 0} to="/orders?tab=completed" className="bg-mint" />
           <Stat
             label="Avg. time to lock"
             value={stats.loading ? '…' : stats.data?.stats.avgMinutesToLock != null ? `${stats.data.stats.avgMinutesToLock}m` : '—'}
             hint="pools you hosted"
+            className="bg-sky"
           />
         </div>
       </section>

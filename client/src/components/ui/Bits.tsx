@@ -7,12 +7,12 @@ import { cx, initials } from '../../utils/format.js';
 /* ----------------------------- Badges ----------------------------- */
 
 const statusStyles: Record<PoolStatus, string> = {
-  OPEN: 'bg-lime/10 text-lime border-lime/30',
-  LOCKED: 'bg-warn/10 text-warn border-warn/30',
-  ORDERED: 'bg-info/10 text-info border-info/30',
-  DELIVERED: 'bg-ok/10 text-ok border-ok/30',
-  CANCELLED: 'bg-danger/10 text-danger border-danger/30',
-  EXPIRED: 'bg-faint/10 text-muted border-line-strong/40',
+  OPEN: 'bg-mint text-fg border-transparent',
+  LOCKED: 'bg-sun text-fg border-transparent',
+  ORDERED: 'bg-sky text-fg border-transparent',
+  DELIVERED: 'bg-mint text-fg border-transparent',
+  CANCELLED: 'bg-blush text-fg border-transparent',
+  EXPIRED: 'bg-overlay text-muted border-transparent',
 };
 const statusLabels: Record<PoolStatus, string> = {
   OPEN: 'Open',
@@ -25,16 +25,16 @@ const statusLabels: Record<PoolStatus, string> = {
 
 export const StatusBadge: React.FC<{ status: PoolStatus; className?: string }> = ({ status, className }) => (
   <span className={cx('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide', statusStyles[status], className)}>
-    {status === 'OPEN' && <span className="h-1.5 w-1.5 rounded-full bg-lime animate-pulse" aria-hidden />}
+    {status === 'OPEN' && <span className="h-1.5 w-1.5 rounded-full bg-ok animate-pulse" aria-hidden />}
     {statusLabels[status]}
   </span>
 );
 
 const retailerStyles: Record<RetailerType, string> = {
-  Blinkit: 'bg-[#F8CB46]/15 text-[#E5B82E] border-[#F8CB46]/40',
-  Zepto: 'bg-[#9333EA]/15 text-[#B57BF5] border-[#9333EA]/40',
-  'Flipkart Minutes': 'bg-[#2874F0]/15 text-[#5E9BFF] border-[#2874F0]/40',
-  Other: 'bg-faint/10 text-muted border-line-strong/40',
+  Blinkit: 'bg-sun text-fg border-transparent',
+  Zepto: 'bg-pop/20 text-fg border-transparent',
+  'Flipkart Minutes': 'bg-sky text-fg border-transparent',
+  Other: 'bg-overlay text-muted border-transparent',
 };
 
 export const RetailerBadge: React.FC<{ retailer: RetailerType; customName?: string; className?: string }> = ({ retailer, customName, className }) => (
@@ -51,12 +51,12 @@ export const HostelBadge: React.FC<{ hostel: HostelType; className?: string }> =
 );
 
 const payStyles: Record<PaymentStatus, string> = {
-  PENDING: 'bg-warn/10 text-warn border-warn/30',
-  PROCESSING: 'bg-info/10 text-info border-info/30',
-  PAID: 'bg-lime/10 text-lime border-lime/30',
-  FAILED: 'bg-danger/10 text-danger border-danger/30',
-  REFUND_PENDING: 'bg-faint/10 text-muted border-line-strong/40',
-  REFUNDED: 'bg-faint/10 text-muted border-line-strong/40',
+  PENDING: 'bg-sun text-fg border-transparent',
+  PROCESSING: 'bg-sky text-fg border-transparent',
+  PAID: 'bg-mint text-fg border-transparent',
+  FAILED: 'bg-blush text-danger border-transparent',
+  REFUND_PENDING: 'bg-overlay text-muted border-transparent',
+  REFUNDED: 'bg-overlay text-muted border-transparent',
 };
 export const payLabels: Record<PaymentStatus, string> = {
   PENDING: 'Payment pending',
@@ -199,7 +199,7 @@ export function Tabs<T extends string>({ tabs, value, onChange, className }: { t
 
 /* ----------------------------- Stat tile ----------------------------- */
 
-export const Stat: React.FC<{ label: string; value: React.ReactNode; hint?: string; to?: string }> = ({ label, value, hint, to }) => {
+export const Stat: React.FC<{ label: string; value: React.ReactNode; hint?: string; to?: string; className?: string }> = ({ label, value, hint, to, className }) => {
   const inner = (
     <>
       <p className="text-[11px] font-bold uppercase tracking-wider text-faint">{label}</p>
@@ -208,11 +208,11 @@ export const Stat: React.FC<{ label: string; value: React.ReactNode; hint?: stri
     </>
   );
   return to ? (
-    <Link to={to} className="card block p-4 transition-colors hover:border-lime/40">
+    <Link to={to} className={cx('card block border-transparent p-4 transition-transform hover:-translate-y-0.5', className)}>
       {inner}
     </Link>
   ) : (
-    <div className="card p-4">{inner}</div>
+    <div className={cx('card border-transparent p-4', className)}>{inner}</div>
   );
 };
 

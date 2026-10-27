@@ -61,19 +61,19 @@ export async function createAndSendOtp(
         to: normalizedEmail,
         subject: `[NightOwl] ${rawOtp} is your verification code`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #0B0F19; color: #F7F4EB; padding: 32px; border-radius: 12px; border: 1px solid #223055;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #FBF7EE; color: #111111; padding: 32px; border-radius: 16px; border: 1px solid #E5DCC8;">
             <div style="text-align: center; margin-bottom: 24px;">
-              <h1 style="color: #CCFF00; font-size: 26px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">NightOwl 🦉</h1>
-              <p style="color: #94886E; margin-top: 6px; font-size: 14px;">Your midnight cravings, together.</p>
+              <h1 style="color: #111111; font-size: 26px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">NightOwl 🦉</h1>
+              <p style="color: #6B6048; margin-top: 6px; font-size: 14px;">Your midnight cravings, together.</p>
             </div>
-            <div style="background: #141D33; border-radius: 8px; padding: 24px; text-align: center; border: 1px solid #1A2542;">
-              <p style="margin: 0 0 12px; font-size: 15px; color: #ECE6D6;">${emailTitle}</p>
-              <div style="font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #CCFF00; margin: 16px 0; font-family: monospace;">
+            <div style="background: #F9D97A; border-radius: 12px; padding: 24px; text-align: center;">
+              <p style="margin: 0 0 12px; font-size: 15px; color: #111111;">${emailTitle}</p>
+              <div style="font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #111111; margin: 16px 0; font-family: monospace;">
                 ${rawOtp}
               </div>
-              <p style="font-size: 13px; color: #BDB197; margin: 0;">This single-use code expires in 10 minutes. Never share this code with anyone.</p>
+              <p style="font-size: 13px; color: #4A4028; margin: 0;">This single-use code expires in 10 minutes. Never share this code with anyone.</p>
             </div>
-            <p style="font-size: 12px; color: #64748B; text-align: center; margin-top: 24px;">
+            <p style="font-size: 12px; color: #8A7A50; text-align: center; margin-top: 24px;">
               Designed for SST students at Uniworld 1 & Uniworld 2.
             </p>
           </div>

@@ -57,7 +57,8 @@ export const SelectHostelPage: React.FC = () => {
                 aria-checked={active}
                 onClick={() => setSelected(h)}
                 className={cx(
-                  'card group relative overflow-hidden p-4 text-left transition-all hover:-translate-y-0.5 hover:border-lime/50',
+                  'card group relative overflow-hidden border-transparent p-4 text-left transition-all hover:-translate-y-0.5',
+                  h === 'Uniworld 1' ? 'bg-sky' : 'bg-blush',
                   active && 'border-lime ring-2 ring-lime/40'
                 )}
               >

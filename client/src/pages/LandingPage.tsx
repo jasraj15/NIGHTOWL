@@ -40,8 +40,8 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* ------------------------------------------------------------ Hero */}
-      <section className="mx-auto max-w-7xl px-5 pb-10 pt-6 sm:px-8 sm:pt-10">
-        <p className="inline-flex items-center gap-2 rounded-full border-2 border-fg px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em]">
+      <section className="night-sky -mt-20 pt-20"><div className="mx-auto max-w-7xl px-5 pb-10 pt-6 sm:px-8 sm:pt-10">
+        <p className="inline-flex items-center gap-2 rounded-full bg-fg px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
           SST hostels · Uniworld 1 & 2 · @sst.scaler.com only
         </p>
         <h1 className="display mt-6 max-w-5xl text-[3rem] font-black leading-[0.95] tracking-tight sm:text-7xl lg:text-[6.5rem] animate-fade-up">
@@ -61,7 +61,7 @@ export const LandingPage: React.FC = () => {
             </a>
           </div>
         </div>
-      </section>
+      </div></section>
 
       {/* Photo band with marquee */}
       <section className="relative mx-auto max-w-[96rem] px-3 sm:px-5">
@@ -106,15 +106,15 @@ export const LandingPage: React.FC = () => {
           </div>
           <ol className="grid gap-4 sm:grid-cols-2">
             {steps.map(({ icon: Icon, title, text }, i) => (
-              <li key={title} className={['rounded-3xl p-6', i % 3 === 0 ? 'bg-surface' : i % 3 === 1 ? 'bg-blush' : 'bg-pop text-white'].join(' ')}>
+              <li key={title} className={['rounded-3xl p-6 text-fg', ['bg-sun', 'bg-blush', 'bg-sky', 'bg-mint'][i % 4]].join(' ')}>
                 <div className="flex items-center justify-between">
-                  <span className={['flex h-11 w-11 items-center justify-center rounded-full', i % 3 === 2 ? 'bg-white/20' : 'bg-fg text-canvas'].join(' ')}>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-fg text-white">
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="display text-2xl font-black opacity-40">0{i + 1}</span>
                 </div>
                 <h3 className="display mt-5 text-xl font-bold">{title}</h3>
-                <p className={['mt-1.5 text-sm', i % 3 === 2 ? 'text-white/80' : 'text-muted'].join(' ')}>{text}</p>
+                <p className="mt-1.5 text-sm text-fg/70">{text}</p>
               </li>
             ))}
           </ol>
@@ -152,7 +152,7 @@ export const LandingPage: React.FC = () => {
                   ['Rohit', 'Cold drinks ×2', '₹100'],
                   ['Meera', 'Bread, eggs, milk', '₹150'],
                 ].map(([n, items, amt]) => (
-                  <li key={n} className="flex items-center justify-between rounded-xl bg-blush/50 px-3 py-2">
+                  <li key={n} className={["flex items-center justify-between rounded-xl px-3 py-2", ["bg-sun/60","bg-sky","bg-mint"][["Asha","Rohit","Meera"].indexOf(n)]].join(" ")}>
                     <span className="text-muted">
                       <span className="font-semibold text-fg">{n}</span> · {items}
                     </span>
