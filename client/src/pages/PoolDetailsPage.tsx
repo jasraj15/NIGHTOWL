@@ -177,7 +177,7 @@ export const PoolDetailsPage: React.FC = () => {
   const saveItem = async (data: { name: string; quantity: number; unitPrice: number; note?: string }) => {
     if (itemModal.item) await patch(`/pools/${id}/items/${itemModal.item._id}`, data);
     else await post(`/pools/${id}/items`, data);
-    toast.success(itemModal.item ? 'Item updated' : 'Item added');
+    if (itemModal.item) toast.success('Item updated');
     refetch();
   };
 
@@ -476,6 +476,7 @@ export const PoolDetailsPage: React.FC = () => {
         open={itemModal.open}
         onClose={() => setItemModal({ open: false, item: null })}
         onSubmit={saveItem}
+        onAdded={(n) => !itemModal.item && toast.success(n === 1 ? 'Item added to the shared cart' : `${n} items added to the shared cart`)}
         item={itemModal.item}
         contributionCap={pool.contributionCap}
         mySubtotalExcludingThis={mySubtotal - (itemModal.item?.itemSubtotal || 0)}
