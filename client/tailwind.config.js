@@ -23,6 +23,8 @@ export default {
           soft: token('c-lime-soft'),
           ink: token('c-lime-ink'),
         },
+        pop: token('c-pop'),
+        blush: token('c-blush'),
         danger: token('c-danger'),
         warn: token('c-warn'),
         info: token('c-info'),
@@ -37,7 +39,7 @@ export default {
         xl2: '1.25rem',
       },
       boxShadow: {
-        glow: '0 0 28px -6px rgb(var(--c-lime) / 0.45)',
+        glow: '0 10px 24px -10px rgb(var(--c-lime) / 0.45)',
         card: '0 10px 30px -14px rgb(0 0 0 / 0.55)',
       },
       keyframes: {

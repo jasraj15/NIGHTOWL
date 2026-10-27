@@ -391,8 +391,8 @@ const AppearanceSection: React.FC = () => {
   };
 
   const options: { value: ThemePreference; label: string; icon: React.ElementType; blurb: string }[] = [
-    { value: 'dark', label: 'Dark', icon: Moon, blurb: 'Midnight navy — easy on the eyes at 1 am.' },
-    { value: 'light', label: 'Light', icon: Sun, blurb: 'Warm paper for daytime planning.' },
+    { value: 'light', label: 'Day', icon: Sun, blurb: 'Butter yellow, white cards, black type.' },
+    { value: 'dark', label: 'Night', icon: Moon, blurb: 'Midnight navy and lime — easy on the eyes at 1 am.' },
     { value: 'system', label: 'System', icon: Monitor, blurb: 'Follow your device setting.' },
   ];
 

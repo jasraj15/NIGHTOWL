@@ -63,7 +63,7 @@ const NotificationPreferencesSchema = new Schema<NotificationPreferences>(
 
 const PreferencesSchema = new Schema<UserPreferences>(
   {
-    theme: { type: String, enum: ['dark', 'light', 'system'], default: 'dark' },
+    theme: { type: String, enum: ['dark', 'light', 'system'], default: 'light' },
     notifications: { type: NotificationPreferencesSchema, default: () => ({}) },
     showPhoneToPoolMembers: { type: Boolean, default: false },
   },

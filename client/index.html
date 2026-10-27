@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/owl-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0B0F19" />
+    <meta name="theme-color" content="#F9D97A" />
     <title>NightOwl — Your midnight cravings, together</title>
     <meta
       name="description"
@@ -13,14 +13,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,700;1,9..144,900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,700..900,100;1,9..144,700..900,100&display=swap"
       rel="stylesheet"
     />
     <script>
       // Apply the saved theme before first paint to avoid a flash.
       (function () {
         try {
-          var t = localStorage.getItem('nightowl-theme') || 'dark';
+          var t = localStorage.getItem('nightowl-theme') || 'light';
           var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.classList.toggle('dark', dark);
           document.documentElement.classList.toggle('light', !dark);

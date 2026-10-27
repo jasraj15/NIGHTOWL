@@ -18,7 +18,7 @@ function readStored(): ThemePreference {
   } catch {
     /* ignore */
   }
-  return 'dark';
+  return 'light';
 }
 
 function resolve(t: ThemePreference): 'dark' | 'light' {
@@ -35,7 +35,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setResolved(r);
     document.documentElement.classList.toggle('dark', r === 'dark');
     document.documentElement.classList.toggle('light', r === 'light');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', r === 'dark' ? '#0B0F19' : '#F7F5EF');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', r === 'dark' ? '#0B0F19' : '#F9D97A');
   }, []);
 
   useEffect(() => {
