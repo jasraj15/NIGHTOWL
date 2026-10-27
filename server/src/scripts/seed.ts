@@ -76,7 +76,7 @@ async function seed() {
   // Pool 1: Uniworld 1 - Blinkit - OPEN
   const closingIn30 = new Date(Date.now() + 45 * 60 * 1000);
   const pool1 = await Pool.create({
-    title: 'Midnight Maggi & Energy Drinks Sprint 🍜',
+    title: 'Midnight chips & cold drinks run 🥤',
     retailer: 'Blinkit',
     hostel: 'Uniworld 1',
     deliveryZone: 'Tower A Ground Lobby',
@@ -95,7 +95,7 @@ async function seed() {
   const item1 = await PoolItem.create({
     poolId: pool1._id,
     userId: userArjun._id,
-    name: 'Maggi 2-Minute Noodles (Pack of 4)',
+    name: 'Lays Magic Masala (party pack)',
     quantity: 2,
     unitPrice: 56,
     itemSubtotal: 112,

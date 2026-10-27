@@ -4,7 +4,7 @@ Record on a laptop with a phone-sized second window (or a real phone) so the liv
 
 | Time | Scene | What to show / say |
 |---|---|---|
-| 0:00–0:30 | **The problem** | Landing page. "₹80 of Maggi never meets a ₹300 minimum. Three people on one floor do — but WhatsApp threads lose track of who owes what." |
+| 0:00–0:30 | **The problem** | Landing page. "₹80 of chips and a Coke never meets a ₹300 minimum. Three people on one floor do — but WhatsApp threads lose track of who owes what." |
 | 0:30–1:10 | **Verified onboarding** | Register with a fresh `@sst.scaler.com` email → show a Gmail address being rejected → OTP (dev hint on screen / Resend email) → hostel-selection screen → dashboard greeting with your hostel. Mention HttpOnly cookie session surviving a refresh. |
 | 1:10–1:50 | **Create a pool** | Create Pool page: Zepto, ₹300 minimum, 15-minute countdown, pickup spot, delivery confirmation checkbox. Point out "countdown starts from the server clock". Add one item. |
 | 1:50–2:40 | **Live collaborative cart** | Second window: log in as `priya.demo@sst.scaler.com`, open Discover (recommended pool with reasons), join with delivery confirmation, add two items. Cut back to window 1: items, total, progress bar and participant list update without refresh. Edit/remove an item; show a non-owner can't edit it. |

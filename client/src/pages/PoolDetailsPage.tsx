@@ -265,7 +265,7 @@ export const PoolDetailsPage: React.FC = () => {
             <MapPin className="h-4 w-4 text-lime" /> {pool.deliveryZone}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <Users className="h-4 w-4 text-lime" /> {pool.participantCount}/{pool.participantLimit} students
+            <Users className="h-4 w-4 text-lime" /> {pool.participantCount} student{pool.participantCount === 1 ? '' : 's'} in
           </span>
           <span className={cx('inline-flex items-center gap-1.5 font-mono', urgent && isOpen && 'font-bold text-warn')}>
             <Clock className="h-4 w-4 text-lime" />
@@ -282,7 +282,7 @@ export const PoolDetailsPage: React.FC = () => {
                 <span className="text-faint"> / {money(pool.targetAmount)}</span>
               </p>
               <p className={cx('text-sm font-semibold', pool.remainingAmount <= 0 ? 'text-lime' : 'text-warn')}>
-                {pool.remainingAmount <= 0 ? 'Minimum reached' : `${money(pool.remainingAmount)} to go`}
+                {pool.remainingAmount <= 0 ? 'Free delivery unlocked' : `${money(pool.remainingAmount)} more for free delivery`}
               </p>
             </div>
             <Progress value={pool.progressPercent} className="mt-2 h-3" label="Progress toward minimum order" />
@@ -413,7 +413,7 @@ export const PoolDetailsPage: React.FC = () => {
           {/* Participants */}
           <section className="card p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-faint">
-              Participants · {pool.participantCount}/{pool.participantLimit}
+              Participants · {pool.participantCount}
             </p>
             <ul className="mt-3 space-y-2">
               {participants.map((p) => {

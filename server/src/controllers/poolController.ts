@@ -205,11 +205,14 @@ export async function createPool(req: Request, res: Response, next: NextFunction
     const createdAt = new Date(); // server-confirmed creation time
     const closingTime = new Date(createdAt.getTime() + durationMinutes * 60 * 1000);
 
+    const hostel = data.hostel ?? req.user!.hostel;
+    const hostItemsAmount = data.initialItemsAmount && data.initialItemsAmount > 0 ? Math.round(data.initialItemsAmount * 100) / 100 : 0;
+
     const pool = await Pool.create({
       title: data.title,
       retailer: data.retailer,
       retailerCustomName: data.retailer === 'Other' ? data.retailerCustomName : undefined,
-      hostel: data.hostel,
+      hostel,
       deliveryZone: data.deliveryZone,
       targetAmount: data.targetAmount,
       contributionCap: data.contributionCap,
@@ -220,9 +223,23 @@ export async function createPool(req: Request, res: Response, next: NextFunction
       paymentInstructions: data.feeNotes,
       creator: userId,
       status: 'OPEN',
-      currentSubtotal: 0,
+      currentSubtotal: hostItemsAmount,
       participants: [userId],
     });
+
+    // The host's own cart value is recorded as their first line item so totals, splits and
+    // contributions all flow through the same server-side math as everyone else's items.
+    if (hostItemsAmount > 0) {
+      await PoolItem.create({
+        poolId: pool._id,
+        userId,
+        name: "Host's items (already in cart)",
+        quantity: 1,
+        unitPrice: hostItemsAmount,
+        itemSubtotal: hostItemsAmount,
+        note: 'Entered when the pool was created',
+      });
+    }
 
     await AuditEvent.create({
       poolId: pool._id,
@@ -234,6 +251,7 @@ export async function createPool(req: Request, res: Response, next: NextFunction
         hostel: pool.hostel,
         deliveryZone: pool.deliveryZone,
         targetAmount: pool.targetAmount,
+        hostItemsAmount,
         durationMinutes,
         closingTime,
       },

@@ -1,12 +1,12 @@
 export type HostelType = 'Uniworld 1' | 'Uniworld 2';
-export type RetailerType = 'Blinkit' | 'Zepto' | 'Flipkart Minutes' | 'Other';
+export type RetailerType = 'Blinkit' | 'Zepto' | 'Swiggy Instamart' | 'Flipkart Minutes' | 'Amazon Now' | 'BigBasket Now' | 'Other';
 export type PoolStatus = 'OPEN' | 'LOCKED' | 'ORDERED' | 'DELIVERED' | 'CANCELLED' | 'EXPIRED';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'REFUND_PENDING' | 'REFUNDED';
 export type PaymentMethod = 'RAZORPAY' | 'MANUAL_UPI';
 export type ThemePreference = 'dark' | 'light' | 'system';
 
 export const HOSTELS: HostelType[] = ['Uniworld 1', 'Uniworld 2'];
-export const RETAILERS: RetailerType[] = ['Blinkit', 'Zepto', 'Flipkart Minutes', 'Other'];
+export const RETAILERS: RetailerType[] = ['Blinkit', 'Zepto', 'Swiggy Instamart', 'Flipkart Minutes', 'Amazon Now', 'BigBasket Now', 'Other'];
 export const COUNTDOWN_PRESETS = [5, 10, 15, 20, 30, 45, 60] as const;
 
 export interface NotificationPreferences {

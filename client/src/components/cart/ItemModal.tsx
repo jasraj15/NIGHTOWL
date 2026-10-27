@@ -81,12 +81,12 @@ export const ItemModal: React.FC<ItemModalProps> = ({ open, onClose, onSubmit, i
             {errors.form}
           </p>
         )}
-        <Input label="Item name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Maggi Masala 4-pack" maxLength={100} error={errors.name} />
+        <Input label="Item name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Lays Magic Masala (big pack)" maxLength={100} error={errors.name} />
         <div className="grid grid-cols-2 gap-3">
           <Input label="Quantity" required type="number" inputMode="numeric" min={1} max={99} value={quantity} onChange={(e) => setQuantity(e.target.value)} error={errors.quantity} />
-          <Input label="Unit price (₹)" required type="number" inputMode="decimal" min={1} step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="56" error={errors.unitPrice} />
+          <Input label="Unit price (₹)" required type="number" inputMode="decimal" min={1} step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="40" error={errors.unitPrice} />
         </div>
-        <Textarea label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Any flavour except tomato" maxLength={150} className="min-h-[64px]" />
+        <Textarea label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Chilled, please · any flavour is fine" maxLength={150} className="min-h-[64px]" />
         <div className="flex items-center justify-between rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm">
           <span className="text-muted">Item subtotal</span>
           <span className="font-mono font-bold text-fg">{money(subtotal)}</span>

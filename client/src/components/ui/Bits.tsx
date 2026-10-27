@@ -33,7 +33,10 @@ export const StatusBadge: React.FC<{ status: PoolStatus; className?: string }> =
 const retailerStyles: Record<RetailerType, string> = {
   Blinkit: 'bg-sun text-fg border-transparent',
   Zepto: 'bg-pop/20 text-fg border-transparent',
+  'Swiggy Instamart': 'bg-blush text-fg border-transparent',
   'Flipkart Minutes': 'bg-sky text-fg border-transparent',
+  'Amazon Now': 'bg-sun text-fg border-transparent',
+  'BigBasket Now': 'bg-mint text-fg border-transparent',
   Other: 'bg-overlay text-muted border-transparent',
 };
 

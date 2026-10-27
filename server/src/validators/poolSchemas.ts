@@ -10,11 +10,12 @@ const hostelEnum = z.enum(['Uniworld 1', 'Uniworld 2'], {
 export const createPoolSchema = z
   .object({
     title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100, 'Title cannot exceed 100 characters'),
-    retailer: z.enum(['Blinkit', 'Zepto', 'Flipkart Minutes', 'Other'], {
-      errorMap: () => ({ message: 'Retailer must be Blinkit, Zepto, Flipkart Minutes, or Other' }),
+    retailer: z.enum(['Blinkit', 'Zepto', 'Swiggy Instamart', 'Flipkart Minutes', 'Amazon Now', 'BigBasket Now', 'Other'], {
+      errorMap: () => ({ message: 'Choose a supported retailer or Other' }),
     }),
     retailerCustomName: z.string().trim().max(50).optional(),
-    hostel: hostelEnum,
+    /** Optional: defaults to the creator's own hostel (chosen during onboarding). */
+    hostel: hostelEnum.optional(),
     deliveryZone: z
       .string()
       .trim()
@@ -34,7 +35,7 @@ export const createPoolSchema = z
       .int('Participant limit must be an integer')
       .min(2, 'At least 2 participants required')
       .max(30, 'Participant limit cannot exceed 30')
-      .default(8),
+      .default(30),
     /**
      * Countdown in minutes from the SERVER's clock (never a client-supplied absolute time).
      * Presets: 5/10/15/20/30/45/60; anything else is treated as a custom duration within limits.
@@ -47,6 +48,8 @@ export const createPoolSchema = z
       .optional(),
     /** Legacy field: accepted for backwards compatibility and converted to a duration server-side. */
     closingTime: z.string().optional(),
+    /** Value of the items the host has already put in their retailer cart; becomes the host's first cart line. */
+    initialItemsAmount: z.number().min(0).max(50000).optional(),
     notes: z.string().trim().max(300).optional(),
     expectedDeliveryFee: z.number().min(0).max(5000).optional(),
     feeNotes: z.string().trim().max(200).optional(),
@@ -127,7 +130,7 @@ export const reportSchema = z.object({
 
 export const discoverPoolsQuerySchema = z.object({
   hostel: z.enum(['Uniworld 1', 'Uniworld 2', 'ALL']).optional(),
-  retailer: z.enum(['Blinkit', 'Zepto', 'Flipkart Minutes', 'Other', 'ALL']).optional(),
+  retailer: z.enum(['Blinkit', 'Zepto', 'Swiggy Instamart', 'Flipkart Minutes', 'Amazon Now', 'BigBasket Now', 'Other', 'ALL']).optional(),
   status: z.enum(['OPEN', 'LOCKED', 'ORDERED', 'DELIVERED', 'CANCELLED', 'EXPIRED', 'ALL']).optional(),
   search: z.string().trim().max(80).optional(),
   closingSoon: z.enum(['true', 'false']).optional(),

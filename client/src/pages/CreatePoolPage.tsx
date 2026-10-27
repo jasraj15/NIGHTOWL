@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Clock, Info, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, Info, Plus, Trash2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { get, post, errorMessage, ApiError } from '../services/api.js';
-import { COUNTDOWN_PRESETS, DraftItem, HOSTELS, Pool, PoolDraft, RETAILERS, RetailerType, HostelType } from '../types/index.js';
+import { COUNTDOWN_PRESETS, DraftItem, Pool, PoolDraft, RETAILERS, RetailerType } from '../types/index.js';
 import { Button } from '../components/ui/Button.js';
 import { Input, Select, Textarea, Checkbox } from '../components/ui/Field.js';
-import { Alert, PageHeader } from '../components/ui/Bits.js';
+import { Alert, PageHeader, HostelBadge, Progress } from '../components/ui/Bits.js';
 import { money, cx } from '../utils/format.js';
 
 const MIN_DURATION = 5;
@@ -17,17 +17,13 @@ interface FormState {
   title: string;
   retailer: RetailerType;
   retailerCustomName: string;
-  hostel: HostelType;
   deliveryZone: string;
   deliveryConfirmed: boolean;
   targetAmount: string;
-  contributionCap: string;
-  participantLimit: string;
+  initialItemsAmount: string;
   durationPreset: string; // minutes or 'custom'
   customDuration: string;
   notes: string;
-  expectedDeliveryFee: string;
-  feeNotes: string;
 }
 
 export const CreatePoolPage: React.FC = () => {
@@ -41,17 +37,13 @@ export const CreatePoolPage: React.FC = () => {
     title: '',
     retailer: 'Blinkit',
     retailerCustomName: '',
-    hostel: user?.hostel || 'Uniworld 1',
     deliveryZone: '',
     deliveryConfirmed: false,
     targetAmount: '',
-    contributionCap: '',
-    participantLimit: '8',
+    initialItemsAmount: '',
     durationPreset: '20',
     customDuration: '',
     notes: '',
-    expectedDeliveryFee: '',
-    feeNotes: '',
   });
   const [draftItems, setDraftItems] = useState<DraftItem[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,11 +63,8 @@ export const CreatePoolPage: React.FC = () => {
           title: d.title,
           retailer: d.retailer,
           retailerCustomName: d.retailerCustomName || '',
-          hostel: d.hostel,
           deliveryZone: d.deliveryZone,
           targetAmount: String(d.targetAmount),
-          contributionCap: d.contributionCap ? String(d.contributionCap) : '',
-          participantLimit: String(d.participantLimit),
           durationPreset: COUNTDOWN_PRESETS.includes(d.durationMinutes as any) ? String(d.durationMinutes) : 'custom',
           customDuration: COUNTDOWN_PRESETS.includes(d.durationMinutes as any) ? '' : String(d.durationMinutes),
           notes: d.notes || '',
@@ -95,20 +84,24 @@ export const CreatePoolPage: React.FC = () => {
   const durationMinutes = useMemo(() => (form.durationPreset === 'custom' ? parseInt(form.customDuration, 10) : parseInt(form.durationPreset, 10)), [form]);
   const closesAt = useMemo(() => (Number.isFinite(durationMinutes) ? new Date(Date.now() + durationMinutes * 60000) : null), [durationMinutes]);
 
+  const target = Number(form.targetAmount) || 0;
+  const mine = Number(form.initialItemsAmount) || 0;
+  const draftTotal = draftItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+  const alreadyIn = Math.round((mine + draftTotal) * 100) / 100;
+  const remaining = Math.max(0, Math.round((target - alreadyIn) * 100) / 100);
+  const progress = target > 0 ? Math.min(100, Math.round((alreadyIn / target) * 100)) : 0;
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (form.title.trim().length < 3) e.title = 'Give the pool a title (at least 3 characters)';
     if (form.retailer === 'Other' && !form.retailerCustomName.trim()) e.retailerCustomName = 'Name the retailer';
-    if (form.deliveryZone.trim().length < 2) e.deliveryZone = 'Where will the order be collected?';
-    if (!form.deliveryConfirmed) e.deliveryConfirmed = 'Confirm the delivery location is valid for this hostel';
-    const target = Number(form.targetAmount);
-    if (!(target >= 1 && target <= 50000)) e.targetAmount = 'Enter the retailer minimum (₹1 – ₹50,000)';
-    if (form.contributionCap && !(Number(form.contributionCap) >= 1)) e.contributionCap = 'Cap must be at least ₹1';
-    const limit = Number(form.participantLimit);
-    if (!(Number.isInteger(limit) && limit >= 2 && limit <= 30)) e.participantLimit = 'Between 2 and 30 participants';
+    if (form.deliveryZone.trim().length < 2) e.deliveryZone = 'Where should people meet you to collect their stuff?';
+    if (!form.deliveryConfirmed) e.deliveryConfirmed = 'Please confirm the meeting spot';
+    if (!(target >= 1 && target <= 50000)) e.targetAmount = 'Enter the amount needed for free delivery (₹1 – ₹50,000)';
+    if (form.initialItemsAmount && !(mine >= 0 && mine <= 50000)) e.initialItemsAmount = 'Enter a valid amount';
+    if (mine > target && target > 0) e.initialItemsAmount = 'Your items already exceed the minimum — you can order on your own!';
     if (!(Number.isInteger(durationMinutes) && durationMinutes >= MIN_DURATION && durationMinutes <= MAX_DURATION))
       e.duration = `Choose between ${MIN_DURATION} and ${MAX_DURATION} minutes`;
-    if (form.expectedDeliveryFee && Number(form.expectedDeliveryFee) < 0) e.expectedDeliveryFee = 'Fee cannot be negative';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -123,29 +116,24 @@ export const CreatePoolPage: React.FC = () => {
         title: form.title.trim(),
         retailer: form.retailer,
         retailerCustomName: form.retailer === 'Other' ? form.retailerCustomName.trim() : undefined,
-        hostel: form.hostel,
         deliveryZone: form.deliveryZone.trim(),
         deliveryConfirmed: true,
-        targetAmount: Number(form.targetAmount),
-        contributionCap: form.contributionCap ? Number(form.contributionCap) : undefined,
-        participantLimit: Number(form.participantLimit),
+        targetAmount: target,
+        initialItemsAmount: mine > 0 ? mine : undefined,
         durationMinutes,
         notes: form.notes.trim() || undefined,
-        expectedDeliveryFee: form.expectedDeliveryFee ? Number(form.expectedDeliveryFee) : undefined,
-        feeNotes: form.feeNotes.trim() || undefined,
       });
       const pool = res.pool;
-      // Add duplicated items (owner is already a participant).
       let added = 0;
       for (const it of draftItems) {
         try {
           await post(`/pools/${pool._id}/items`, it);
           added++;
         } catch {
-          /* report below */
+          /* reported via toast below */
         }
       }
-      toast.success('Pool created', added ? `${added} item${added === 1 ? '' : 's'} carried over from your previous order.` : `Closes at ${pool.closingTime ? new Date(pool.closingTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}`);
+      toast.success('Pool created', added ? `${added} item${added === 1 ? '' : 's'} carried over from your previous order.` : `Closes at ${new Date(pool.closingTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`);
       navigate(`/pools/${pool._id}`, { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.data?.details?.length) {
@@ -159,13 +147,19 @@ export const CreatePoolPage: React.FC = () => {
     }
   };
 
+  const retailerName = form.retailer === 'Other' ? form.retailerCustomName || 'the retailer' : form.retailer;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
       <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-fg">
         <ArrowLeft className="h-4 w-4" /> Back to discover
       </Link>
       <div className="mt-4">
-        <PageHeader eyebrow="New pool" title="Start a group order" description="You'll be the host: you lock the cart, place the retailer order yourself, and record the real bill so everyone pays their exact share." />
+        <PageHeader
+          eyebrow="New pool"
+          title="Start a group order"
+          description="Tell your hostel what you're ordering and how much is still needed for free delivery. Others add their items until the gap is filled."
+        />
       </div>
 
       {loadingDraft ? (
@@ -175,28 +169,27 @@ export const CreatePoolPage: React.FC = () => {
           {serverError && <Alert kind="danger">{serverError}</Alert>}
 
           <section className="card space-y-4 p-5 sm:p-6">
-            <h2 className="font-bold text-fg">What & where</h2>
-            <Input label="Pool title" required value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="Late-night Maggi run · Tower B" maxLength={100} error={errors.title} />
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-fg">What & where</h2>
+              {user && <HostelBadge hostel={user.hostel} />}
+            </div>
+            <Input label="Pool title" required value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="Late-night chips & Coke run" maxLength={100} error={errors.title} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Select label="Retailer" required value={form.retailer} onChange={(e) => set('retailer', e.target.value as RetailerType)} options={RETAILERS.map((r) => ({ value: r, label: r }))} />
               {form.retailer === 'Other' ? (
-                <Input label="Retailer name" required value={form.retailerCustomName} onChange={(e) => set('retailerCustomName', e.target.value)} placeholder="e.g. Swiggy Instamart" error={errors.retailerCustomName} />
+                <Input label="Retailer name" required value={form.retailerCustomName} onChange={(e) => set('retailerCustomName', e.target.value)} placeholder="e.g. Dunzo" error={errors.retailerCustomName} />
               ) : (
-                <Select label="Delivery hostel" required value={form.hostel} onChange={(e) => set('hostel', e.target.value as HostelType)} options={HOSTELS.map((h) => ({ value: h, label: h }))} />
+                <Input label="Delivering to" value={user?.hostel || ''} readOnly hint="Your hostel from onboarding. Change it in Settings if you've moved." />
               )}
             </div>
-            {form.retailer === 'Other' && (
-              <Select label="Delivery hostel" required value={form.hostel} onChange={(e) => set('hostel', e.target.value as HostelType)} options={HOSTELS.map((h) => ({ value: h, label: h }))} />
-            )}
             <Input
-              label="Confirmed delivery location / pickup spot"
+              label="Where should people collect their stuff?"
               required
               value={form.deliveryZone}
               onChange={(e) => set('deliveryZone', e.target.value)}
-              placeholder="e.g. Tower B lobby, near the guard desk"
+              placeholder="Meet at reception · front gate · near the lift on floor 3"
               maxLength={100}
               error={errors.deliveryZone}
-              hint="Participants collect their items here. Be specific — the retailer rider needs one address."
             />
             <Checkbox
               checked={form.deliveryConfirmed}
@@ -204,19 +197,18 @@ export const CreatePoolPage: React.FC = () => {
               error={errors.deliveryConfirmed}
               label={
                 <>
-                  I've checked that <span className="font-semibold text-fg">{form.retailer === 'Other' ? form.retailerCustomName || 'this retailer' : form.retailer}</span> delivers to{' '}
-                  <span className="font-semibold text-fg">{form.hostel}</span> at this location. One retailer address can't serve both hostels.
+                  I'll be at this spot when the <span className="font-semibold text-fg">{retailerName}</span> order arrives so people can collect their items.
                 </>
               }
             />
-            <Textarea label="Notes for participants (optional)" value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Cash not accepted · I'll wait at the lobby for 10 min after delivery" maxLength={300} />
+            <Textarea label="Note for participants (optional)" value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Ping me on WhatsApp when you add items · I'll wait at the gate for 10 min" maxLength={300} />
           </section>
 
           <section className="card space-y-4 p-5 sm:p-6">
-            <h2 className="font-bold text-fg">Target & limits</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <h2 className="font-bold text-fg">How much is needed?</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
               <Input
-                label="Minimum order value (₹)"
+                label="Minimum order for free delivery (₹)"
                 required
                 type="number"
                 inputMode="decimal"
@@ -225,24 +217,43 @@ export const CreatePoolPage: React.FC = () => {
                 onChange={(e) => set('targetAmount', e.target.value)}
                 placeholder="300"
                 error={errors.targetAmount}
-                hint="The retailer's minimum for this address."
+                hint={`Check ${retailerName}'s app — the free-delivery threshold for our address.`}
               />
-              <Input label="Max participants" type="number" inputMode="numeric" min={2} max={30} value={form.participantLimit} onChange={(e) => set('participantLimit', e.target.value)} error={errors.participantLimit} />
-              <Input label="Per-person cap (₹, optional)" type="number" inputMode="decimal" min={1} value={form.contributionCap} onChange={(e) => set('contributionCap', e.target.value)} placeholder="None" error={errors.contributionCap} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
               <Input
-                label="Expected delivery fee (₹, optional)"
+                label="Your items so far (₹)"
                 type="number"
                 inputMode="decimal"
                 min={0}
-                value={form.expectedDeliveryFee}
-                onChange={(e) => set('expectedDeliveryFee', e.target.value)}
-                placeholder="0"
-                error={errors.expectedDeliveryFee}
-                hint="Only if you know it. The real fee is recorded when you place the order."
+                value={form.initialItemsAmount}
+                onChange={(e) => set('initialItemsAmount', e.target.value)}
+                placeholder="120"
+                error={errors.initialItemsAmount}
+                hint="The value of what's already in your cart. It becomes your first line in the shared cart."
               />
-              <Input label="Fee notes (optional)" value={form.feeNotes} onChange={(e) => set('feeNotes', e.target.value)} placeholder="e.g. surge fee likely after 1 am" maxLength={200} />
+            </div>
+
+            <div className={cx('rounded-2xl p-4 transition-colors', target > 0 ? 'bg-sun' : 'bg-overlay')}>
+              {target > 0 ? (
+                <>
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted">Others need to add</p>
+                      <p className="display text-3xl font-black text-fg">{remaining <= 0 ? 'Nothing — you’re there!' : money(remaining)}</p>
+                    </div>
+                    <p className="text-right text-xs text-muted">
+                      {money(alreadyIn)} in · target {money(target)}
+                    </p>
+                  </div>
+                  <Progress value={progress} className="mt-3 h-2.5 bg-white/60" label="Progress toward free delivery" />
+                  <p className="mt-2 flex items-start gap-1.5 text-xs text-muted">
+                    <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" /> This is what your hostel sees on the pool card. Anyone can join and add items until it hits zero.
+                  </p>
+                </>
+              ) : (
+                <p className="flex items-start gap-1.5 text-xs text-muted">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Enter the minimum to see how much others need to add.
+                </p>
+              )}
             </div>
           </section>
 
@@ -251,7 +262,7 @@ export const CreatePoolPage: React.FC = () => {
               <h2 className="font-bold text-fg">Countdown</h2>
               {closesAt && Number.isFinite(durationMinutes) && (
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-                  <Clock className="h-3.5 w-3.5 text-lime" /> closes ≈ {closesAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  <Clock className="h-3.5 w-3.5" /> closes ≈ {closesAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </div>
@@ -287,7 +298,7 @@ export const CreatePoolPage: React.FC = () => {
               </p>
             )}
             <p className="flex items-start gap-2 text-xs text-faint">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> The countdown starts from the server's clock when the pool is created. If it expires before the target is met, you can extend it, cancel it, or proceed after confirming the retailer's real requirement.
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> The countdown starts from the server's clock when the pool is created. If it runs out before the gap is filled, you can extend it, cancel it, or go ahead anyway.
             </p>
           </section>
 
@@ -295,7 +306,7 @@ export const CreatePoolPage: React.FC = () => {
             <section className="card space-y-3 p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-fg">Items carried over</h2>
-                <span className="text-xs text-muted">{money(draftItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0))} total</span>
+                <span className="text-xs text-muted">{money(draftTotal)} total</span>
               </div>
               <ul className="divide-y divide-line">
                 {draftItems.map((it, idx) => (

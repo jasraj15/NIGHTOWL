@@ -52,9 +52,9 @@ export const PoolCard: React.FC<PoolCardProps> = ({ pool, reasons, highlight }) 
         <Progress value={progress} className="mt-2" label="Progress toward minimum order" />
         <div className="mt-1.5 flex items-center justify-between text-[11px]">
           {remaining <= 0 ? (
-            <span className="font-semibold text-lime">Minimum reached</span>
+            <span className="font-semibold text-ok">Free delivery unlocked</span>
           ) : (
-            <span className="font-medium text-warn">{money(remaining)} to go</span>
+            <span className="font-semibold text-fg">{money(remaining)} more needed</span>
           )}
           <span className="font-mono text-faint">{progress}%</span>
         </div>
@@ -74,7 +74,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({ pool, reasons, highlight }) 
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            {pool.participantCount ?? pool.participants?.length ?? 1}/{pool.participantLimit}
+            {pool.participantCount ?? pool.participants?.length ?? 1} in
           </span>
           <span className={cx('inline-flex items-center gap-1 font-mono', urgent && isOpen && 'font-bold text-warn')}>
             <Clock className="h-3.5 w-3.5" />

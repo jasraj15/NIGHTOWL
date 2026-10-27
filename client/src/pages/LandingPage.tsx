@@ -49,7 +49,7 @@ export const LandingPage: React.FC = () => {
         </h1>
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
           <p className="max-w-xl text-lg text-muted sm:text-xl">
-            ₹80 of Maggi never meets a ₹300 minimum. Three people on your floor do. NightOwl turns a chaotic WhatsApp thread into one live shared cart, a countdown, and a fee
+            ₹80 of chips and a Coke never meets a ₹300 minimum. Three people on your floor do. NightOwl turns a chaotic WhatsApp thread into one live shared cart, a countdown, and a fee
             split that adds up to the paisa.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
@@ -68,7 +68,7 @@ export const LandingPage: React.FC = () => {
         <div className="relative overflow-hidden rounded-[2rem] bg-fg">
           <picture>
             <source media="(max-width: 640px)" srcSet="/hero-hostel-sm.jpg" />
-            <img src="/hero-hostel.jpg" alt="A hostel desk at night: Maggi, cold drinks and a laptop, with the NightOwl poster on the wall" className="h-[60vh] min-h-[420px] w-full object-cover object-[70%_35%] sm:h-[72vh]" fetchPriority="high" />
+            <img src="/hero-hostel.jpg" alt="A hostel desk at night: chips, cold drinks and a laptop, with the NightOwl poster on the wall" className="h-[60vh] min-h-[420px] w-full object-cover object-[70%_35%] sm:h-[72vh]" fetchPriority="high" />
           </picture>
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-fg/90 to-transparent" aria-hidden />
           <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-canvas px-3 py-1.5 text-xs font-bold text-fg sm:left-8 sm:top-8">
@@ -132,7 +132,7 @@ export const LandingPage: React.FC = () => {
                   <span className="h-1.5 w-1.5 rounded-full bg-canvas animate-pulse" /> Open
                 </span>
               </div>
-              <h3 className="display mt-4 text-2xl font-bold">Late-night Maggi run · Tower B</h3>
+              <h3 className="display mt-4 text-2xl font-bold">Late-night chips & Coke run · Tower B</h3>
               <p className="mt-1 text-sm text-muted">Uniworld 1 · Lobby pickup · closes in 12:40</p>
               <div className="mt-5 rounded-2xl bg-overlay p-4">
                 <div className="flex justify-between text-sm">
@@ -148,9 +148,9 @@ export const LandingPage: React.FC = () => {
               </div>
               <ul className="mt-4 space-y-2 text-sm">
                 {[
-                  ['Asha', 'Maggi ×4, Lays', '₹80'],
-                  ['Rohit', 'Cold drinks ×2', '₹100'],
-                  ['Meera', 'Bread, eggs, milk', '₹150'],
+                  ['Asha', 'Lays ×2, Kurkure', '₹80'],
+                  ['Rohit', 'Coke 750ml ×2', '₹100'],
+                  ['Meera', 'Chocolates, biscuits', '₹150'],
                 ].map(([n, items, amt]) => (
                   <li key={n} className={["flex items-center justify-between rounded-xl px-3 py-2", ["bg-sun/60","bg-sky","bg-mint"][["Asha","Rohit","Meera"].indexOf(n)]].join(" ")}>
                     <span className="text-muted">

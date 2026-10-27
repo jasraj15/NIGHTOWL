@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema, Model, Types } from 'mongoose';
 import { HostelType } from './User.js';
 
-export type RetailerType = 'Blinkit' | 'Zepto' | 'Flipkart Minutes' | 'Other';
+export type RetailerType = 'Blinkit' | 'Zepto' | 'Swiggy Instamart' | 'Flipkart Minutes' | 'Amazon Now' | 'BigBasket Now' | 'Other';
 export type PoolStatus = 'OPEN' | 'LOCKED' | 'ORDERED' | 'DELIVERED' | 'CANCELLED' | 'EXPIRED';
 
 export interface IPool extends Document {
@@ -56,7 +56,7 @@ const PoolSchema = new Schema<IPool>(
     },
     retailer: {
       type: String,
-      enum: ['Blinkit', 'Zepto', 'Flipkart Minutes', 'Other'],
+      enum: ['Blinkit', 'Zepto', 'Swiggy Instamart', 'Flipkart Minutes', 'Amazon Now', 'BigBasket Now', 'Other'],
       required: true,
       index: true,
     },
@@ -88,7 +88,7 @@ const PoolSchema = new Schema<IPool>(
     },
     participantLimit: {
       type: Number,
-      default: 8,
+      default: 30,
       min: [2, 'At least 2 participants allowed'],
       max: [30, 'Maximum 30 participants allowed'],
     },
