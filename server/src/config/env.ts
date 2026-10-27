@@ -31,6 +31,10 @@ const envSchema = z.object({
   // Email (OTP)
   RESEND_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   EMAIL_FROM: z.string().default('NightOwl <onboarding@resend.dev>'),
+  // Evaluation-only escape hatch: when no email provider is configured, also return the OTP in the
+  // API response in production so graders can log in without a verified sending domain. Keep false otherwise.
+  OTP_FALLBACK_DISPLAY: z.preprocess(emptyToUndefined, z.enum(['true', 'false']).default('false')).transform((v) => v === 'true'),
+
   COLLEGE_EMAIL_DOMAIN: z.string().default('sst.scaler.com'),
 
   // Razorpay (server-side only — never shipped to the browser except RAZORPAY_KEY_ID)

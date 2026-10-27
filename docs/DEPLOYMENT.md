@@ -36,6 +36,10 @@ RAZORPAY_ROUTE_ENABLED=false
 
 The server sets `trust proxy = 1` so secure cookies and rate limiting work behind Render's proxy. Socket.IO shares the HTTP port and the same CORS allow-list.
 
+### OTP without a verified email domain
+
+Resend's shared `onboarding@resend.dev` sender only delivers to the Resend account's own address, so other students' codes would never arrive. For the evaluation deployment set `OTP_FALLBACK_DISPLAY=true` (already in `render.yaml`): the API keeps `NODE_ENV=production` (Secure, SameSite=None cookies) but returns the code to the browser, where the login screen shows it with a "development fallback" label. Once a domain is verified in Resend, set `RESEND_API_KEY` and flip the flag to `false`.
+
 ## 3. Frontend on Vercel
 | Setting | Value |
 |---|---|

@@ -231,6 +231,7 @@ Backend (`server/.env`, template in `server/.env.example`):
 | `JWT_SECRET` | yes | ≥16 chars; long random in prod |
 | `COOKIE_DOMAIN` | no | Only if API & app share a parent domain |
 | `RESEND_API_KEY` / `EMAIL_FROM` | prod | Empty in dev → OTP printed to console & returned as `debugOtp` |
+| `OTP_FALLBACK_DISPLAY` | no (`false`) | Evaluation deployments only: return the OTP in the response when no email provider is configured (cookies stay Secure) |
 | `COLLEGE_EMAIL_DOMAIN` | no | `sst.scaler.com` |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | for online payments | `rzp_test_…` for test mode |
 | `RAZORPAY_WEBHOOK_SECRET` | for webhooks | |
