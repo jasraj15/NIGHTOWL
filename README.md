@@ -2,6 +2,9 @@
 
 A full-stack group-ordering platform for students of **Uniworld 1** and **Uniworld 2** hostels. Small late-night purchases from Blinkit, Zepto, Flipkart Minutes (or any retailer) are combined into one shared cart, tracked live, and the fees are split fairly to the paisa.
 
+**Live:** app → https://nightowl-tau.vercel.app · API health → https://nightowl-api-vljl.onrender.com/api/v1/health · code → https://github.com/jasraj15/NIGHTOWL
+*(Free tiers: the API sleeps after 15 min idle, so the first request can take ~30 s. Email delivery isn't configured, so the login screen shows the verification code itself — see §15.)*
+
 > **What NightOwl is not:** it is an independent coordination tool. It never accesses retailer carts, prices, stock or APIs, and it does not place orders for you. The pool host places the order in the retailer's app and records the real bill in NightOwl.
 
 ---
@@ -301,8 +304,8 @@ The exact test/build results for this submission are recorded in [`docs/VERIFICA
 
 Step-by-step instructions, including cross-site cookie requirements, are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Summary:
 
-* **Backend → Render** (`render.yaml` provided): build `npm install && npm run build --workspace=server`, start `npm run start --workspace=server`, health check `/api/v1/health`, env vars from §11 with `NODE_ENV=production`, `CLIENT_URL=https://<your-app>.vercel.app`.
-* **Frontend → Vercel**: root `client`, framework Vite, build `npm run build`, output `dist`, env `VITE_API_URL=https://<your-api>.onrender.com`; `client/vercel.json` handles SPA rewrites.
+* **Backend → Render** (`render.yaml` provided): build `npm install && npm run build --workspace=server`, start `npm run start --workspace=server`, health check `/api/v1/health`, env vars from §11 with `NODE_ENV=production`, `CLIENT_URL=https://<your-app>.vercel.app`. Live instance: `https://nightowl-api-vljl.onrender.com`.
+* **Frontend → Vercel**: root `client`, framework Vite, build `npm run build`, output `dist`, env `VITE_API_URL=https://<your-api>.onrender.com`; `client/vercel.json` handles SPA rewrites. Live instance: `https://nightowl-tau.vercel.app`.
 * **Database → MongoDB Atlas**: create a cluster + user, allow Render's egress IPs (or `0.0.0.0/0` for a demo), paste the SRV URI into `MONGODB_URI`.
 * **Razorpay**: add the deployed webhook URL `https://<api>/api/v1/payments/razorpay/webhook` with events `payment.captured, payment.failed, order.paid, refund.created, refund.processed`.
 
@@ -316,7 +319,8 @@ This repository is **prepared** for deployment; no deployment is claimed unless 
 * **Recipient settlement** — Checkout money lands in the platform merchant account; paying hosts out needs Razorpay Route onboarding (documented, off by default).
 * **Phone ownership** is not verified (no SMS OTP); the UI never claims it is.
 * **Client libraries** — the task stack lists TanStack Query, React Hook Form and Zod on the client. The development environment for this submission had no package-registry access, so these could not be installed; equivalent behaviour is implemented with a 40-line `useAsync` hook (fetch/refetch/loading/error) and explicit validation functions mirroring the server's Zod schemas. The `razorpay` npm SDK is likewise replaced by a 150-line REST client over Node's built-in `fetch`/`crypto` (same endpoints, same HMAC checks); swapping either in later is a local change.
-* **Email deliverability** depends on a verified Resend domain in production; the dev fallback prints OTPs.
+* **Email deliverability** — Resend's shared sender only delivers to the account owner, and no custom domain is verified yet, so the live deployment runs with `OTP_FALLBACK_DISPLAY=true`: the verification code is shown on the login screen (clearly labelled) instead of being emailed. Cookies, CORS and every other production setting are unchanged; set `RESEND_API_KEY` + a verified domain and flip the flag off to send real emails.
+* **Payments on the live instance** run in the labelled manual (host-verified UPI reference) mode because no Razorpay test keys are configured on Render; the Razorpay path is covered by the automated tests and activates by adding the three keys.
 * **Single-region, single-instance** Socket.IO (no Redis adapter) — fine for a hostel-scale deployment.
 
 ## 16. AI usage disclosure
