@@ -13,11 +13,11 @@
   :root,
   .light {
     color-scheme: light;
-    --c-base: 251 247 238; /* #FBF7EE cream */
+    --c-base: 243 216 138; /* #F3D88A muted butter */
     --c-surface: 255 255 255; /* white cards */
     --c-raised: 255 255 255;
-    --c-overlay: 244 237 220; /* warm sand */
-    --c-line: 229 220 200;
+    --c-overlay: 250 237 195; /* pale butter */
+    --c-line: 222 196 122;
     --c-line-strong: 17 17 17;
     --c-fg: 17 17 17; /* near black */
     --c-muted: 74 64 40;
@@ -27,7 +27,7 @@
     --c-lime-ink: 255 255 255;
     --c-pop: 166 107 242; /* #A66BF2 lavender */
     --c-blush: 246 201 212; /* #F6C9D4 pink */
-    --c-sun: 249 217 122; /* #F9D97A butter */
+    --c-sun: 252 228 150; /* lighter butter for tiles on the yellow canvas */
     --c-sky: 207 228 247; /* #CFE4F7 light blue */
     --c-mint: 212 239 208; /* #D4EFD0 light green */
     --c-danger: 190 32 32;
