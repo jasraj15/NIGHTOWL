@@ -1,170 +1,135 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ShoppingBag,
-  ArrowRight,
-  CheckCircle,
-} from 'lucide-react';
+import { ArrowRight, Users, Lock, Wallet, Clock, ShieldCheck, Moon } from 'lucide-react';
+import { Logo, OwlMark } from '../components/brand/Logo.js';
 import { useAuth } from '../context/AuthContext.js';
+
+const steps = [
+  { icon: Users, title: 'Open or join a pool', text: 'Pick your hostel and retailer. Others in Uniworld 1 or 2 add their own items to the same cart.' },
+  { icon: Clock, title: 'Beat the countdown', text: 'Every pool closes on a server-timed deadline. Watch the combined total climb toward the minimum.' },
+  { icon: Lock, title: 'Host locks & orders', text: 'The host locks the cart, places the order in the retailer app, and records the real bill.' },
+  { icon: Wallet, title: 'Pay your exact share', text: 'Fees are split proportionally to the paisa. Pay through Razorpay or a host-verified UPI reference.' },
+];
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
+  const cta = user ? (user.hostelSelected ? '/dashboard' : '/select-hostel') : '/auth?mode=register';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32">
-        {/* Midnight Glowing Gradient Backdrop */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-lime/10 blur-[130px] rounded-full pointer-events-none" />
-        <div className="absolute top-1/3 left-1/4 w-[400px] h-[300px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          {/* Tagline Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-navy-800 border border-navy-700 mb-8 animate-fadeIn">
-            <span className="w-2 h-2 rounded-full bg-lime animate-ping" />
-            <span className="text-xs font-semibold text-lime tracking-wide uppercase">
-              Exclusive for Uniworld 1 & Uniworld 2
-            </span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-ivory-50 max-w-4xl mx-auto leading-[1.1]">
-            Your midnight cravings,{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime via-lime-300 to-emerald-400">
-              together.
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="mt-6 text-lg sm:text-xl text-ivory-300 max-w-2xl mx-auto leading-relaxed">
-            Never pay ₹40 delivery on a ₹70 cold brew again. Pool late-night orders with hostel mates from Blinkit, Zepto, and Flipkart Minutes to unlock free delivery.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/dashboard"
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-lime text-navy-950 font-extrabold text-base hover:bg-lime-400 shadow-glow-lime transition-all duration-200 hover:scale-[1.02]"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              Explore Live Pools
-              <ArrowRight className="w-5 h-5" />
+    <div className="night-sky min-h-dvh">
+      <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Logo />
+        <nav className="flex items-center gap-2">
+          {user ? (
+            <Link to={cta} className="inline-flex h-10 items-center gap-2 rounded-xl bg-lime px-4 text-sm font-bold text-lime-ink shadow-glow">
+              Open app <ArrowRight className="h-4 w-4" />
             </Link>
-
-            {!user && (
-              <Link
-                to="/auth?mode=register"
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-navy-800 hover:bg-navy-750 text-ivory-100 font-bold text-base border border-navy-700 transition-all hover:border-navy-600"
-              >
-                Join with @sst.scaler.com
+          ) : (
+            <>
+              <Link to="/auth?mode=login" className="rounded-xl px-4 py-2 text-sm font-semibold text-muted hover:text-fg">
+                Log in
               </Link>
-            )}
-          </div>
+              <Link to="/auth?mode=register" className="inline-flex h-10 items-center rounded-xl bg-lime px-4 text-sm font-bold text-lime-ink shadow-glow hover:bg-lime-soft">
+                Join NightOwl
+              </Link>
+            </>
+          )}
+        </nav>
+      </header>
 
-          {/* Value Props Strip */}
-          <div className="mt-16 pt-10 border-t border-navy-800/80 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-left">
-            <div>
-              <div className="text-2xl font-extrabold text-lime font-mono">₹0</div>
-              <div className="text-xs text-ivory-400 mt-0.5">Shared delivery fee target</div>
-            </div>
-            <div>
-              <div className="text-2xl font-extrabold text-ivory-100 font-mono">100%</div>
-              <div className="text-xs text-ivory-400 mt-0.5">Verified SST college students</div>
-            </div>
-            <div>
-              <div className="text-2xl font-extrabold text-ivory-100 font-mono">₹0.01</div>
-              <div className="text-xs text-ivory-400 mt-0.5">Exact mathematical fee splitting</div>
-            </div>
-            <div>
-              <div className="text-2xl font-extrabold text-lime font-mono">Live</div>
-              <div className="text-xs text-ivory-400 mt-0.5">Real-time collaborative cart</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Feature Showcase Grid */}
-      <div className="py-16 bg-navy-950/40 border-y border-navy-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-xs font-bold text-lime uppercase tracking-widest mb-2">
-              Built for Campus Life
-            </h2>
-            <h3 className="text-3xl font-extrabold text-ivory-50 tracking-tight">
-              How NightOwl solves midnight orders
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="p-6 rounded-2xl bg-navy-850 border border-navy-750 relative overflow-hidden group hover:border-navy-700 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-lime/10 text-lime flex items-center justify-center font-bold font-mono text-lg mb-4 border border-lime/20">
-                01
-              </div>
-              <h4 className="text-lg font-bold text-ivory-100 mb-2">
-                Discover or Create a Pool
-              </h4>
-              <p className="text-sm text-ivory-400 leading-relaxed">
-                Filter by your hostel (Uniworld 1 or Uniworld 2) and favorite retailer (Blinkit, Zepto, Flipkart Minutes). Set a closing countdown timer.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="p-6 rounded-2xl bg-navy-850 border border-navy-750 relative overflow-hidden group hover:border-navy-700 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold font-mono text-lg mb-4 border border-sky-500/20">
-                02
-              </div>
-              <h4 className="text-lg font-bold text-ivory-100 mb-2">
-                Collaborative Live Cart
-              </h4>
-              <p className="text-sm text-ivory-400 leading-relaxed">
-                Add snacks, noodles, and beverages with your roommates in real time. Watch the progress bar unlock free delivery together.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="p-6 rounded-2xl bg-navy-850 border border-navy-750 relative overflow-hidden group hover:border-navy-700 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold font-mono text-lg mb-4 border border-purple-500/20">
-                03
-              </div>
-              <h4 className="text-lg font-bold text-ivory-100 mb-2">
-                Exact Proportional Split
-              </h4>
-              <p className="text-sm text-ivory-400 leading-relaxed">
-                Shared delivery and handling fees are proportionally distributed down to the last paisa. Pay the host directly via UPI with zero platform fee.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Campus Trust Banner */}
-      <div className="py-16 max-w-5xl mx-auto px-4 text-center">
-        <div className="p-8 rounded-3xl bg-navy-850 border border-navy-750 shadow-2xl relative overflow-hidden">
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 rounded-2xl bg-navy-800 border border-navy-700 flex items-center justify-center p-2 mb-4">
-              <img src="/owl-icon.svg" alt="NightOwl" className="w-full h-full" />
-            </div>
-            <h3 className="text-2xl font-bold text-ivory-50">
-              Only Verified Scaler School of Technology Accounts
-            </h3>
-            <p className="mt-2 text-sm text-ivory-300 max-w-xl">
-              We verify all student accounts using one-time verification codes sent to your official <span className="font-mono text-lime">@sst.scaler.com</span> inbox.
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pt-20 lg:px-8">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div className="animate-fade-up">
+            <span className="inline-flex items-center gap-2 rounded-full border border-lime/30 bg-lime/10 px-3 py-1 text-xs font-bold text-lime">
+              <Moon className="h-3.5 w-3.5" /> For Uniworld 1 & Uniworld 2 · @sst.scaler.com only
+            </span>
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-fg sm:text-6xl">
+              Your midnight cravings, <span className="text-lime">together.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base text-muted sm:text-lg">
+              ₹80 of snacks never meets a ₹300 minimum. Pool it with the floor: combine small Blinkit, Zepto and Flipkart Minutes orders into one shared cart, track every
+              rupee live, and split the fees fairly.
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <span className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-navy-800 text-ivory-300 border border-navy-700">
-                <CheckCircle className="w-3.5 h-3.5 text-lime" /> Zero Stored Passwords
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-navy-800 text-ivory-300 border border-navy-700">
-                <CheckCircle className="w-3.5 h-3.5 text-lime" /> Single-Use Email OTPs
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-navy-800 text-ivory-300 border border-navy-700">
-                <CheckCircle className="w-3.5 h-3.5 text-lime" /> Secure HttpOnly Session Cookies
-              </span>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link to={cta} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-lime px-6 text-base font-bold text-lime-ink shadow-glow hover:bg-lime-soft">
+                {user ? 'Go to dashboard' : 'Verify your college email'} <ArrowRight className="h-5 w-5" />
+              </Link>
+              <a href="#how" className="inline-flex h-12 items-center justify-center rounded-xl border border-line-strong px-6 text-base font-semibold text-fg hover:bg-overlay">
+                How it works
+              </a>
             </div>
+            <p className="mt-4 flex items-center gap-2 text-xs text-faint">
+              <ShieldCheck className="h-4 w-4 text-lime" /> NightOwl coordinates group orders; it never accesses retailer carts or places orders for you.
+            </p>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-md animate-fade-up">
+            <div className="card relative overflow-hidden p-6">
+              <div className="flex items-center justify-between">
+                <span className="rounded-md border border-[#9333EA]/40 bg-[#9333EA]/15 px-2 py-0.5 text-xs font-semibold text-[#B57BF5]">Zepto</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-lime/30 bg-lime/10 px-2.5 py-1 text-[11px] font-bold uppercase text-lime">
+                  <span className="h-1.5 w-1.5 rounded-full bg-lime animate-pulse" /> Open
+                </span>
+              </div>
+              <h3 className="mt-4 text-xl font-bold text-fg">Late-night Maggi run · Tower B</h3>
+              <p className="mt-1 text-sm text-muted">Uniworld 1 · Lobby pickup · closes in 12:40</p>
+              <div className="mt-5 rounded-xl border border-line bg-base/60 p-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Cart progress</span>
+                  <span className="font-bold text-fg">
+                    ₹330 <span className="text-faint">/ ₹300</span>
+                  </span>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-base">
+                  <div className="h-full w-full rounded-full bg-gradient-to-r from-lime to-ok" />
+                </div>
+                <p className="mt-2 text-xs font-semibold text-lime">Minimum reached · 4 students in</p>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ['Asha', 'Maggi ×4, Lays', '₹80'],
+                  ['Rohit', 'Cold drinks ×2', '₹100'],
+                  ['Meera', 'Bread, eggs, milk', '₹150'],
+                ].map(([n, items, amt]) => (
+                  <li key={n} className="flex items-center justify-between rounded-lg border border-line bg-surface px-3 py-2">
+                    <span className="text-muted">
+                      <span className="font-semibold text-fg">{n}</span> · {items}
+                    </span>
+                    <span className="font-mono font-semibold text-fg">{amt}</span>
+                  </li>
+                ))}
+              </ul>
+              <OwlMark className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 opacity-10" />
+            </div>
+            <p className="mt-2 text-center text-[11px] text-faint">Illustrative example — all real figures in the app come from your pools.</p>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section id="how" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-extrabold text-fg sm:text-3xl">How a pool works</h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map(({ icon: Icon, title, text }, i) => (
+            <div key={title} className="card p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime/10 text-lime">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="font-mono text-xs text-faint">0{i + 1}</span>
+              </div>
+              <h3 className="mt-4 font-bold text-fg">{title}</h3>
+              <p className="mt-1 text-sm text-muted">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t border-line py-8 text-center text-xs text-faint">
+        © {new Date().getFullYear()} NightOwl · An independent student project ·{' '}
+        <Link to="/legal" className="hover:text-fg">
+          Terms, privacy & community rules
+        </Link>
+      </footer>
     </div>
   );
 };

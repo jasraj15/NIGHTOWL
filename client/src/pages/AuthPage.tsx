@@ -1,441 +1,314 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Mail, Phone, Building2, User as UserIcon, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { Mail, Phone, User as UserIcon, ArrowRight, ShieldCheck, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
-import { HostelType } from '../types/index.js';
+import { useToast } from '../context/ToastContext.js';
+import { errorMessage } from '../services/api.js';
+import { Button } from '../components/ui/Button.js';
+import { Input, Checkbox } from '../components/ui/Field.js';
+import { Alert } from '../components/ui/Bits.js';
+import { OwlMark } from '../components/brand/Logo.js';
+
+const COLLEGE_EMAIL = /^[a-zA-Z0-9._%+-]+@sst\.scaler\.com$/;
+const INDIAN_PHONE = /^[6-9]\d{9}$/;
+
+type Mode = 'register' | 'login';
+type Step = 'form' | 'otp';
 
 export const AuthPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, register, requestLoginOtp, verifyOtp, resendOtp } = useAuth();
+  const location = useLocation() as { state?: { from?: string } };
+  const toast = useToast();
+  const { register, requestLoginOtp, resendOtp, verifyOtp } = useAuth();
 
-  const [mode, setMode] = useState<'register' | 'login'>(
-    searchParams.get('mode') === 'login' ? 'login' : 'register'
-  );
+  const mode: Mode = params.get('mode') === 'login' ? 'login' : 'register';
+  const setMode = (m: Mode) => {
+    setParams({ mode: m }, { replace: true });
+    setErrors({});
+    setServerError(null);
+  };
 
-  // Registration Form State
+  const [step, setStep] = useState<Step>('form');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [hostel, setHostel] = useState<HostelType>('Uniworld 1');
-  const [roomNumber, setRoomNumber] = useState('');
-
-  // OTP State
-  const [step, setStep] = useState<'form' | 'otp'>('form');
+  const [phone, setPhone] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const [debugOtp, setDebugOtp] = useState<string | undefined>(undefined);
-
+  const [debugOtp, setDebugOtp] = useState<string | undefined>();
+  const [info, setInfo] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  // If already logged in, redirect to dashboard
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  // Cooldown timer countdown
   useEffect(() => {
     if (cooldown <= 0) return;
-    const timer = setInterval(() => {
-      setCooldown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
+    const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
   }, [cooldown]);
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!COLLEGE_EMAIL.test(email.trim())) e.email = 'Use your @sst.scaler.com college email';
+    if (mode === 'register') {
+      if (fullName.trim().length < 2) e.fullName = 'Enter your full name';
+      if (!INDIAN_PHONE.test(phone)) e.phone = 'Enter a valid 10-digit Indian mobile number';
+      if (!agreed) e.agreed = 'Please accept the community rules and privacy policy';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const cooldownFrom = (resendAfter?: number | string) => {
+    if (typeof resendAfter === 'number') return resendAfter;
+    if (resendAfter) return Math.max(5, Math.round((new Date(resendAfter).getTime() - Date.now()) / 1000));
+    return 60;
+  };
+
+  const afterOtpSent = (res: { message: string; debugOtp?: string; resendAfter?: number | string }) => {
+    setInfo(res.message);
+    setDebugOtp(res.debugOtp);
+    setCooldown(cooldownFrom(res.resendAfter));
+    setOtp('');
+    setStep('otp');
+  };
+
+  const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setServerError(null);
+    if (!validate()) return;
     setLoading(true);
-
     try {
-      const res = await register({
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phoneNumber: phoneNumber.trim(),
-        hostel,
-        roomNumber: roomNumber.trim() || undefined,
-      });
-
-      setInfoMessage(res.message);
-      if (res.debugOtp) setDebugOtp(res.debugOtp);
-      setCooldown(60);
-      setStep('otp');
-    } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      const res =
+        mode === 'register'
+          ? await register({ fullName: fullName.trim(), email: email.trim().toLowerCase(), phoneNumber: phone, agreedToRules: true })
+          : await requestLoginOtp(email.trim().toLowerCase());
+      afterOtpSent(res);
+    } catch (err) {
+      setServerError(errorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      const res = await requestLoginOtp(email.trim());
-      setInfoMessage(res.message);
-      if (res.debugOtp) setDebugOtp(res.debugOtp);
-      setCooldown(60);
-      setStep('otp');
-    } catch (err: any) {
-      setError(err.message || 'Login request failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  const submitOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      setError('Please enter the full 6-digit verification code.');
+      setErrors({ otp: 'Enter the 6-digit code' });
       return;
     }
-
-    setError(null);
+    setErrors({});
+    setServerError(null);
     setLoading(true);
-
     try {
-      await verifyOtp(email.trim(), otp.trim(), mode);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Verification failed');
+      const { nextStep } = await verifyOtp(email.trim().toLowerCase(), otp, mode);
+      toast.success(mode === 'register' ? 'Email verified — welcome to NightOwl!' : 'Welcome back!');
+      if (nextStep === 'select-hostel') navigate('/select-hostel', { replace: true });
+      else navigate(location.state?.from && location.state.from !== '/auth' ? location.state.from : '/dashboard', { replace: true });
+    } catch (err) {
+      setServerError(errorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = async () => {
+  const resend = async () => {
     if (cooldown > 0) return;
-    setError(null);
+    setServerError(null);
     try {
-      const res = await resendOtp(email.trim(), mode);
-      setInfoMessage(res.message);
-      if (res.debugOtp) setDebugOtp(res.debugOtp);
-      setCooldown(60);
-    } catch (err: any) {
-      setError(err.message || 'Failed to resend code');
+      const res = await resendOtp(email.trim().toLowerCase(), mode);
+      setInfo(res.message);
+      setDebugOtp(res.debugOtp);
+      setCooldown(cooldownFrom(res.resendAfter));
+    } catch (err) {
+      setServerError(errorMessage(err));
     }
-  };
-
-  // Quick fill helper for demo accounts
-  const handleQuickFillDemo = (demoEmail: string, demoName: string, demoHostel: HostelType) => {
-    setEmail(demoEmail);
-    setFullName(demoName);
-    setPhoneNumber('9876543210');
-    setHostel(demoHostel);
-    setRoomNumber('A-302');
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6">
-        {/* Header Icon & Brand */}
+    <div className="night-sky flex min-h-dvh flex-col">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
         <div className="text-center">
-          <Link to="/" className="inline-block">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-navy-850 border border-navy-750 flex items-center justify-center p-2.5 shadow-xl shadow-navy-950">
-              <img src="/owl-icon.svg" alt="NightOwl" className="w-full h-full" />
-            </div>
+          <Link to="/" className="inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-line bg-raised p-2.5 shadow-card" aria-label="NightOwl home">
+            <OwlMark className="h-full w-full" />
           </Link>
-
-          <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold text-ivory-50">
-            {step === 'otp'
-              ? 'Verify College Email'
-              : mode === 'register'
-              ? 'Join NightOwl'
-              : 'Welcome back, Student'}
-          </h2>
-
-          <p className="mt-1 text-sm text-ivory-400">
-            {step === 'otp'
-              ? `We sent a single-use 6-digit code to ${email}`
-              : 'Late-night group shopping for SST campus hostels.'}
+          <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-fg">
+            {step === 'otp' ? 'Check your inbox' : mode === 'register' ? 'Create your account' : 'Welcome back'}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">
+            {step === 'otp' ? (
+              <>
+                We sent a 6-digit code to <span className="font-semibold text-fg">{email}</span>
+              </>
+            ) : (
+              'Passwordless sign-in for verified SST students.'
+            )}
           </p>
         </div>
 
-        {/* Card Box */}
-        <div className="bg-navy-850 border border-navy-750 rounded-2xl p-6 sm:p-8 shadow-2xl">
-          {error && (
-            <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm">
-              {error}
+        <div className="card mt-8 p-6 sm:p-8">
+          {step === 'form' && (
+            <div role="tablist" className="mb-6 grid grid-cols-2 rounded-xl border border-line bg-surface p-1">
+              {(['register', 'login'] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => setMode(m)}
+                  className={`rounded-lg py-2 text-xs font-bold transition-colors ${mode === m ? 'bg-overlay text-lime' : 'text-muted hover:text-fg'}`}
+                >
+                  {m === 'register' ? 'Create account' : 'Log in'}
+                </button>
+              ))}
             </div>
           )}
 
-          {infoMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-lime/10 border border-lime/30 text-lime text-xs">
-              {infoMessage}
-            </div>
+          {serverError && (
+            <Alert kind="danger" className="mb-4">
+              {serverError}
+            </Alert>
           )}
-
-          {/* Dev Debug Code Hint */}
-          {debugOtp && (
-            <div className="mb-4 p-3 rounded-xl bg-navy-900 border border-lime/40 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-ivory-300 font-semibold">Dev Verification Code:</span>
-                <span className="font-mono text-base font-extrabold text-lime">{debugOtp}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOtp(debugOtp)}
-                className="mt-1 text-[11px] text-lime hover:underline"
-              >
-                Click to autofill code
+          {info && step === 'otp' && (
+            <Alert kind="success" className="mb-4">
+              {info}
+            </Alert>
+          )}
+          {debugOtp && step === 'otp' && (
+            <div className="mb-4 flex items-center justify-between rounded-xl border border-lime/40 bg-base px-4 py-3 text-xs">
+              <span className="font-semibold text-muted">Dev mode — code printed by the server:</span>
+              <button type="button" onClick={() => setOtp(debugOtp)} className="font-mono text-base font-extrabold text-lime hover:underline">
+                {debugOtp}
               </button>
             </div>
           )}
 
           {step === 'form' ? (
-            <>
-              {/* Tab Selector */}
-              <div className="flex rounded-xl bg-navy-900 p-1 mb-6 border border-navy-750">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('register');
-                    setError(null);
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                    mode === 'register'
-                      ? 'bg-navy-800 text-lime shadow-sm'
-                      : 'text-ivory-400 hover:text-ivory-200'
-                  }`}
-                >
-                  Create Account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('login');
-                    setError(null);
-                  }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                    mode === 'login'
-                      ? 'bg-navy-800 text-lime shadow-sm'
-                      : 'text-ivory-400 hover:text-ivory-200'
-                  }`}
-                >
-                  Passwordless Log in
-                </button>
-              </div>
-
-              {/* Form Body */}
-              {mode === 'register' ? (
-                <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                  {/* Full Name */}
-                  <div>
-                    <label className="block text-xs font-semibold text-ivory-300 mb-1">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <UserIcon className="absolute left-3.5 top-3 w-4 h-4 text-ivory-500" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Rahul Sharma"
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* College Email */}
-                  <div>
-                    <label className="block text-xs font-semibold text-ivory-300 mb-1">
-                      Scaler College Email (@sst.scaler.com)
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3.5 top-3 w-4 h-4 text-ivory-500" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="yourname@sst.scaler.com"
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Phone & Hostel */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-ivory-300 mb-1">
-                        Indian Phone (10 digits)
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-3 w-4 h-4 text-ivory-500" />
-                        <input
-                          type="tel"
-                          required
-                          pattern="[6-9][0-9]{9}"
-                          maxLength={10}
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                          placeholder="9876543210"
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-ivory-300 mb-1">
-                        Hostel
-                      </label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-3 w-4 h-4 text-ivory-500" />
-                        <select
-                          value={hostel}
-                          onChange={(e) => setHostel(e.target.value as HostelType)}
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none"
-                        >
-                          <option value="Uniworld 1">Uniworld 1</option>
-                          <option value="Uniworld 2">Uniworld 2</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Room Number */}
-                  <div>
-                    <label className="block text-xs font-semibold text-ivory-400 mb-1">
-                      Room / Wing Number (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={roomNumber}
-                      onChange={(e) => setRoomNumber(e.target.value)}
-                      placeholder="e.g. Tower A - Room 402"
-                      className="w-full px-3.5 py-2 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none"
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-lime text-navy-950 font-bold text-sm hover:bg-lime-400 shadow-glow-lime transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Sending Code...' : 'Get Verification OTP'}
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              ) : (
-                /* Passwordless Login Form */
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-ivory-300 mb-1">
-                      Enter your Registered College Email
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3.5 top-3 w-4 h-4 text-ivory-500" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="yourname@sst.scaler.com"
-                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-navy-900 border border-navy-700 text-ivory-100 text-sm focus:border-lime outline-none font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-lime text-navy-950 font-bold text-sm hover:bg-lime-400 shadow-glow-lime transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Sending Code...' : 'Send Login Code'}
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </form>
-              )}
-
-              {/* Demo Account Quick-Fill */}
-              <div className="mt-6 pt-4 border-t border-navy-750">
-                <span className="text-[11px] text-ivory-400 font-semibold uppercase tracking-wider block mb-2">
-                  Dev Quick-Fill Demo Profiles:
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickFillDemo('arjun.demo@sst.scaler.com', 'Arjun Mehta', 'Uniworld 1')
-                    }
-                    className="p-2 rounded-lg bg-navy-900 hover:bg-navy-800 text-left border border-navy-750 text-ivory-300"
-                  >
-                    <span className="font-semibold text-ivory-100 block">Arjun M.</span>
-                    Uniworld 1 (Host)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickFillDemo('rohit.demo@sst.scaler.com', 'Rohit Verma', 'Uniworld 2')
-                    }
-                    className="p-2 rounded-lg bg-navy-900 hover:bg-navy-800 text-left border border-navy-750 text-ivory-300"
-                  >
-                    <span className="font-semibold text-ivory-100 block">Rohit V.</span>
-                    Uniworld 2 (Host)
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* OTP Step */
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div>
-                <label className="block text-xs font-semibold text-ivory-300 mb-2 text-center">
-                  Enter 6-Digit Single-Use Code
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
+            <form onSubmit={submitForm} className="space-y-4" noValidate>
+              {mode === 'register' && (
+                <Input
+                  label="Full name"
                   required
-                  autoFocus
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  placeholder="• • • • • •"
-                  className="w-full text-center tracking-[12px] text-2xl font-extrabold font-mono py-3 rounded-xl bg-navy-900 border-2 border-navy-700 text-lime focus:border-lime outline-none"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Asha Verma"
+                  autoComplete="name"
+                  leading={<UserIcon className="h-4 w-4" />}
+                  error={errors.fullName}
                 />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || otp.length !== 6}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-lime text-navy-950 font-bold text-sm hover:bg-lime-400 shadow-glow-lime transition-all disabled:opacity-50"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                {loading ? 'Verifying...' : 'Verify & Enter NightOwl'}
-              </button>
-
-              <div className="flex items-center justify-between text-xs pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep('form')}
-                  className="text-ivory-400 hover:text-ivory-200"
-                >
-                  ← Edit Email
+              )}
+              <Input
+                label="College email"
+                required
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@sst.scaler.com"
+                leading={<Mail className="h-4 w-4" />}
+                error={errors.email}
+                hint={mode === 'register' ? 'Only @sst.scaler.com addresses can join. We verify it with a one-time code.' : undefined}
+                className="font-mono"
+              />
+              {mode === 'register' && (
+                <>
+                  <Input
+                    label="Indian mobile number"
+                    required
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="98765 43210"
+                    leading={<Phone className="h-4 w-4" />}
+                    error={errors.phone}
+                    hint="Shared with pool hosts only if you choose to. Phone ownership is not verified."
+                    className="font-mono"
+                  />
+                  <Checkbox
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    error={errors.agreed}
+                    label={
+                      <>
+                        I agree to the{' '}
+                        <Link to="/legal#rules" className="font-semibold text-lime hover:underline">
+                          community rules
+                        </Link>{' '}
+                        and{' '}
+                        <Link to="/legal#privacy" className="font-semibold text-lime hover:underline">
+                          privacy policy
+                        </Link>
+                        .
+                      </>
+                    }
+                  />
+                </>
+              )}
+              <Button type="submit" block size="lg" loading={loading} iconRight={<ArrowRight className="h-4 w-4" />}>
+                {mode === 'register' ? 'Send verification code' : 'Send login code'}
+              </Button>
+              <p className="text-center text-xs text-faint">
+                {mode === 'register' ? 'Already verified?' : 'New here?'}{' '}
+                <button type="button" onClick={() => setMode(mode === 'register' ? 'login' : 'register')} className="font-semibold text-lime hover:underline">
+                  {mode === 'register' ? 'Log in instead' : 'Create an account'}
                 </button>
-
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={submitOtp} className="space-y-5" noValidate>
+              <Input
+                autoFocus
+                label="6-digit verification code"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="••••••"
+                error={errors.otp}
+                hint="The code expires in 10 minutes and works once."
+                className="text-center font-mono text-2xl font-extrabold tracking-[0.5em]"
+              />
+              <Button type="submit" block size="lg" loading={loading} disabled={otp.length !== 6} icon={<ShieldCheck className="h-4 w-4" />}>
+                Verify & continue
+              </Button>
+              <div className="flex items-center justify-between text-xs">
+                <button type="button" onClick={() => setStep('form')} className="inline-flex items-center gap-1 text-muted hover:text-fg">
+                  <ArrowLeft className="h-3.5 w-3.5" /> Change email
+                </button>
                 <button
                   type="button"
-                  onClick={handleResend}
+                  onClick={() => void resend()}
                   disabled={cooldown > 0}
-                  className={`flex items-center gap-1 font-semibold ${
-                    cooldown > 0 ? 'text-ivory-500 cursor-not-allowed' : 'text-lime hover:underline'
-                  }`}
+                  className="inline-flex items-center gap-1 font-semibold text-lime disabled:cursor-not-allowed disabled:text-faint"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {cooldown > 0 ? `Resend code in ${cooldown}s` : 'Resend Code'}
+                  <RefreshCw className="h-3.5 w-3.5" /> {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
                 </button>
               </div>
             </form>
           )}
         </div>
+
+        <p className="mt-6 text-center text-xs text-faint">
+          By continuing you agree to the{' '}
+          <Link to="/legal" className="underline hover:text-fg">
+            terms
+          </Link>
+          ,{' '}
+          <Link to="/legal#privacy" className="underline hover:text-fg">
+            privacy policy
+          </Link>{' '}
+          and{' '}
+          <Link to="/legal#rules" className="underline hover:text-fg">
+            community rules
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

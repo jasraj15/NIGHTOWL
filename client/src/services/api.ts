@@ -1,48 +1,84 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+/**
+ * Thin fetch wrapper for the NightOwl REST API.
+ * - Always sends the HttpOnly session cookie (credentials: 'include').
+ * - Normalises error responses into an ApiError with the server's message.
+ * - Base URL comes from VITE_API_URL in production; in dev, Vite proxies /api to the backend.
+ */
+const RAW_BASE = import.meta.env.VITE_API_URL || '';
+export const API_BASE = RAW_BASE.replace(/\/+$/, '');
+export const API_PREFIX = '/api/v1';
 
-export interface ApiResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  details?: any[];
-  [key: string]: any;
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  data: any;
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+    this.code = data?.code;
+  }
 }
 
-export async function apiFetch<T = any>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+export interface ApiOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown;
+  /** Query params appended to the URL (undefined/empty values are skipped). */
+  query?: Record<string, string | number | boolean | undefined | null>;
+}
 
-  const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+function buildUrl(path: string, query?: ApiOptions['query']): string {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const url = `${API_BASE}${p.startsWith('/api') ? p : `${API_PREFIX}${p}`}`;
+  if (!query) return url;
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(query)) {
+    if (v === undefined || v === null || v === '') continue;
+    params.set(k, String(v));
+  }
+  const qs = params.toString();
+  return qs ? `${url}?${qs}` : url;
+}
 
-  const config: RequestInit = {
-    ...options,
+export async function api<T = any>(path: string, options: ApiOptions = {}): Promise<T> {
+  const { body, query, headers, ...rest } = options;
+  const init: RequestInit = {
+    ...rest,
+    credentials: 'include',
     headers: {
-      ...defaultHeaders,
-      ...(options.headers || {}),
+      Accept: 'application/json',
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(headers || {}),
     },
-    credentials: 'include', // Sends HttpOnly session cookies
   };
+  if (body !== undefined) init.body = JSON.stringify(body);
 
-  const response = await fetch(url, config);
-  const data = await response.json().catch(() => ({
-    success: false,
-    error: `HTTP ${response.status}: Unexpected server response`,
-  }));
-
-  if (!response.ok || data.success === false) {
-    const errorMessage =
-      data.error ||
-      (data.details && data.details[0]?.message) ||
-      `Request failed with status ${response.status}`;
-    const err = new Error(errorMessage);
-    (err as any).data = data;
-    (err as any).status = response.status;
-    throw err;
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, query), init);
+  } catch {
+    throw new ApiError('Cannot reach the NightOwl server. Check your connection and try again.', 0);
   }
 
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.success === false) {
+    const message =
+      data?.error ||
+      data?.details?.[0]?.message ||
+      data?.message ||
+      (res.status === 429 ? 'Too many requests — please slow down.' : `Request failed (${res.status})`);
+    throw new ApiError(message, res.status, data);
+  }
   return data as T;
+}
+
+export const get = <T = any>(path: string, query?: ApiOptions['query']) => api<T>(path, { method: 'GET', query });
+export const post = <T = any>(path: string, body?: unknown) => api<T>(path, { method: 'POST', body: body ?? {} });
+export const patch = <T = any>(path: string, body?: unknown) => api<T>(path, { method: 'PATCH', body: body ?? {} });
+export const del = <T = any>(path: string, body?: unknown) => api<T>(path, { method: 'DELETE', body });
+
+export function errorMessage(err: unknown, fallback = 'Something went wrong'): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error) return err.message || fallback;
+  return fallback;
 }

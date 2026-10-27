@@ -1,105 +1,85 @@
 import React from 'react';
-import { Trash2, ShoppingBag } from 'lucide-react';
-import { PoolItem } from '../../types/index.js';
-import { useAuth } from '../../context/AuthContext.js';
+import { Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { PoolItem, userId, userName } from '../../types/index.js';
+import { Avatar, EmptyState } from '../ui/Bits.js';
+import { money, cx } from '../../utils/format.js';
 
-interface CartItemListProps {
+interface Props {
   items: PoolItem[];
-  isLocked: boolean;
-  onDeleteItem: (itemId: string) => void;
-  poolCreatorId: string;
+  currentUserId: string;
+  isHost: boolean;
+  editable: boolean;
+  onEdit: (item: PoolItem) => void;
+  onDelete: (item: PoolItem) => void;
 }
 
-export const CartItemList: React.FC<CartItemListProps> = ({
-  items,
-  isLocked,
-  onDeleteItem,
-  poolCreatorId,
-}) => {
-  const { user } = useAuth();
-
+export const CartItemList: React.FC<Props> = ({ items, currentUserId, isHost, editable, onEdit, onDelete }) => {
   if (items.length === 0) {
-    return (
-      <div className="text-center py-12 px-4 rounded-2xl bg-navy-850 border border-dashed border-navy-750">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-navy-800 flex items-center justify-center text-ivory-400">
-          <ShoppingBag className="w-6 h-6" />
-        </div>
-        <h4 className="text-base font-bold text-ivory-100">Cart is empty</h4>
-        <p className="text-xs text-ivory-400 max-w-sm mx-auto mt-1">
-          Be the first to add your snacks or essentials to get this order pool rolling!
-        </p>
-      </div>
-    );
+    return <EmptyState icon={<ShoppingBag className="h-7 w-7" />} title="The cart is empty" description="Add the first item — everyone in the pool sees it instantly." className="py-10" />;
   }
 
+  // Group by participant so contributions are obvious.
+  const groups = new Map<string, { name: string; items: PoolItem[]; subtotal: number }>();
+  for (const it of items) {
+    const id = userId(it.userId);
+    const g = groups.get(id) || { name: userName(it.userId), items: [], subtotal: 0 };
+    g.items.push(it);
+    g.subtotal = Math.round((g.subtotal + it.itemSubtotal) * 100) / 100;
+    groups.set(id, g);
+  }
+  const ordered = Array.from(groups.entries()).sort(([a], [b]) => (a === currentUserId ? -1 : b === currentUserId ? 1 : 0));
+
   return (
-    <div className="space-y-2.5">
-      {items.map((item) => {
-        const itemUserId =
-          typeof item.userId === 'object' && item.userId !== null
-            ? item.userId._id
-            : item.userId;
-
-        const itemUserName =
-          typeof item.userId === 'object' && item.userId !== null
-            ? item.userId.fullName
-            : 'Hostel Student';
-
-        const isOwnItem = user && user._id === itemUserId;
-        const isPoolOwner = user && user._id === poolCreatorId;
-        const canDelete = !isLocked && (isOwnItem || isPoolOwner);
-
+    <div className="space-y-4">
+      {ordered.map(([id, g]) => {
+        const mine = id === currentUserId;
         return (
-          <div
-            key={item._id}
-            className="flex items-center justify-between p-3.5 rounded-xl bg-navy-850 hover:bg-navy-800/80 border border-navy-750 transition-colors"
-          >
-            {/* Left: Name, user tag, note */}
-            <div className="space-y-1 min-w-0 pr-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-ivory-100 line-clamp-1">
-                  {item.name}
-                </span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    isOwnItem
-                      ? 'bg-lime/15 text-lime border border-lime/30'
-                      : 'bg-navy-750 text-ivory-300'
-                  }`}
-                >
-                  {isOwnItem ? 'You' : itemUserName}
-                </span>
-              </div>
-
-              {item.note && (
-                <p className="text-xs text-ivory-400 italic">
-                  Note: {item.note}
-                </p>
-              )}
-            </div>
-
-            {/* Right: Quantity x Price, Total, and Delete */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="text-right">
-                <div className="text-sm font-bold font-mono text-ivory-50">
-                  ₹{item.itemSubtotal}
-                </div>
-                <div className="text-[11px] text-ivory-400 font-mono">
-                  {item.quantity} × ₹{item.unitPrice}
+          <div key={id} className={cx('rounded-2xl border p-3 sm:p-4', mine ? 'border-lime/30 bg-lime/5' : 'border-line bg-surface')}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Avatar name={g.name} size="sm" />
+                <div>
+                  <p className="text-sm font-bold text-fg">
+                    {mine ? 'You' : g.name}
+                    <span className="ml-1.5 text-xs font-medium text-faint">
+                      · {g.items.length} item{g.items.length === 1 ? '' : 's'}
+                    </span>
+                  </p>
                 </div>
               </div>
-
-              {canDelete && (
-                <button
-                  onClick={() => onDeleteItem(item._id)}
-                  className="p-1.5 text-ivory-500 hover:text-rose-400 rounded-lg hover:bg-navy-750 transition-colors"
-                  title="Remove item"
-                  aria-label="Remove item"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+              <span className="font-mono text-sm font-bold text-fg">{money(g.subtotal)}</span>
             </div>
+            <ul className="mt-3 divide-y divide-line/70">
+              {g.items.map((it) => {
+                const canEdit = editable && mine;
+                const canDelete = editable && (mine || isHost);
+                return (
+                  <li key={it._id} className="flex items-start justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-fg">
+                        {it.name} <span className="text-faint">× {it.quantity}</span>
+                      </p>
+                      <p className="text-xs text-muted">
+                        {money(it.unitPrice)} each{it.note ? ` · ${it.note}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="font-mono text-sm text-fg">{money(it.itemSubtotal)}</span>
+                      {canEdit && (
+                        <button onClick={() => onEdit(it)} className="rounded-md p-1.5 text-faint hover:bg-overlay hover:text-fg" aria-label={`Edit ${it.name}`}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button onClick={() => onDelete(it)} className="rounded-md p-1.5 text-faint hover:bg-danger/10 hover:text-danger" aria-label={`Remove ${it.name}`}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         );
       })}

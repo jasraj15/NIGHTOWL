@@ -1,59 +1,63 @@
 /** @type {import('tailwindcss').Config} */
+// Semantic design tokens. Every colour maps to a CSS variable defined in src/index.css so
+// the whole app re-themes (dark / light / system) by toggling a class on <html>.
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        navy: {
-          950: '#060911',
-          900: '#0B0F19',
-          850: '#0F1626',
-          800: '#141D33',
-          750: '#1A2542',
-          700: '#223055',
-          600: '#324578',
-        },
-        ivory: {
-          50: '#FCFBF7',
-          100: '#F7F4EB',
-          200: '#ECE6D6',
-          300: '#DBD2BC',
-          400: '#BDB197',
-          500: '#94886E',
-        },
+        base: token('c-base'),
+        surface: token('c-surface'),
+        raised: token('c-raised'),
+        overlay: token('c-overlay'),
+        line: token('c-line'),
+        'line-strong': token('c-line-strong'),
+        fg: token('c-fg'),
+        muted: token('c-muted'),
+        faint: token('c-faint'),
         lime: {
-          300: '#E1FF5A',
-          400: '#D4FF33',
-          DEFAULT: '#CCFF00',
-          500: '#B8E600',
-          600: '#94BA00',
+          DEFAULT: token('c-lime'),
+          soft: token('c-lime-soft'),
+          ink: token('c-lime-ink'),
         },
-        amber: {
-          warm: '#FFB347',
-        },
-        retailer: {
-          blinkit: '#F8CB46',
-          zepto: '#9333EA',
-          flipkart: '#2874F0',
-          other: '#6B7280',
-        }
+        danger: token('c-danger'),
+        warn: token('c-warn'),
+        info: token('c-info'),
+        ok: token('c-ok'),
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      borderRadius: {
+        xl2: '1.25rem',
       },
       boxShadow: {
-        'glow-lime': '0 0 24px -4px rgba(204, 255, 0, 0.35)',
-        'glow-subtle': '0 0 40px -10px rgba(20, 29, 51, 0.8)',
+        glow: '0 0 28px -6px rgb(var(--c-lime) / 0.45)',
+        card: '0 10px 30px -14px rgb(0 0 0 / 0.55)',
+      },
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
-        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      }
+        'fade-up': 'fade-up 260ms ease-out both',
+        'fade-in': 'fade-in 200ms ease-out both',
+        shimmer: 'shimmer 1.6s infinite',
+      },
     },
   },
   plugins: [],
-}
+};
