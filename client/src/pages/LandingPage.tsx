@@ -23,7 +23,7 @@ export const LandingPage: React.FC = () => {
         <Logo />
         <nav className="flex items-center gap-2">
           {user ? (
-            <Link to={cta} className="inline-flex h-11 items-center gap-2 rounded-full bg-fg px-5 text-sm font-bold text-canvas hover:bg-pop hover:text-white">
+            <Link to={cta} className="inline-flex h-11 items-center gap-2 rounded-full bg-fg px-5 text-sm font-bold text-canvas hover:bg-pop hover:text-fg">
               Open app <ArrowRight className="h-4 w-4" />
             </Link>
           ) : (
@@ -31,7 +31,7 @@ export const LandingPage: React.FC = () => {
               <Link to="/auth?mode=login" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-fg/70 hover:text-fg sm:inline-flex">
                 Log in
               </Link>
-              <Link to="/auth?mode=register" className="inline-flex h-11 items-center rounded-full bg-fg px-5 text-sm font-bold text-canvas hover:bg-pop hover:text-white">
+              <Link to="/auth?mode=register" className="inline-flex h-11 items-center rounded-full bg-fg px-5 text-sm font-bold text-canvas hover:bg-pop hover:text-fg">
                 Join NightOwl
               </Link>
             </>
@@ -41,7 +41,7 @@ export const LandingPage: React.FC = () => {
 
       {/* ------------------------------------------------------------ Hero */}
       <section className="night-sky -mt-20 pt-20"><div className="mx-auto max-w-7xl px-5 pb-10 pt-6 sm:px-8 sm:pt-10">
-        <p className="inline-flex items-center gap-2 rounded-full bg-fg px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+        <p className="inline-flex items-center gap-2 rounded-full bg-fg px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-canvas">
           SST hostels · Uniworld 1 & 2 · @sst.scaler.com only
         </p>
         <h1 className="display mt-6 max-w-5xl text-[3rem] font-black leading-[0.95] tracking-tight sm:text-7xl lg:text-[6.5rem] animate-fade-up">
@@ -53,7 +53,7 @@ export const LandingPage: React.FC = () => {
             split that adds up to the paisa.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
-            <Link to={cta} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-fg px-9 text-base font-bold text-canvas transition-colors hover:bg-pop hover:text-white">
+            <Link to={cta} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-fg px-9 text-base font-bold text-canvas transition-colors hover:bg-pop hover:text-fg">
               {user ? 'Go to dashboard' : 'Explore'} <ArrowRight className="h-5 w-5" />
             </Link>
             <a href="#how" className="inline-flex h-14 items-center justify-center rounded-full border-2 border-fg px-7 text-base font-bold text-fg transition-colors hover:bg-fg hover:text-canvas">
@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
               Four steps from <span className="italic text-pop">craving</span> to doorstep.
             </h2>
             <p className="mt-5 max-w-md text-muted">Verified students only. The host places the real order; everyone sees the same cart, the same total and the same split — live.</p>
-            <Link to={cta} className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-fg px-6 text-sm font-bold text-canvas hover:bg-pop hover:text-white">
+            <Link to={cta} className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-fg px-6 text-sm font-bold text-canvas hover:bg-pop hover:text-fg">
               {user ? 'Open the app' : 'Verify your college email'} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -108,7 +108,7 @@ export const LandingPage: React.FC = () => {
             {steps.map(({ icon: Icon, title, text }, i) => (
               <li key={title} className={['rounded-3xl p-6 text-fg', ['bg-sun', 'bg-blush', 'bg-sky', 'bg-mint'][i % 4]].join(' ')}>
                 <div className="flex items-center justify-between">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-fg text-white">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-fg text-canvas">
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="display text-2xl font-black opacity-40">0{i + 1}</span>
