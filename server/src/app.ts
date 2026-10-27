@@ -2,70 +2,65 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { generalApiLimiter } from './middlewares/rateLimiter.js';
-
-import authRoutes from './routes/authRoutes.js';
-import poolRoutes from './routes/poolRoutes.js';
-import itemRoutes from './routes/itemRoutes.js';
-import paymentRoutes from './routes/paymentRoutes.js';
+import { generalApiLimiter, webhookLimiter } from './middlewares/rateLimiter.js';
+import { sanitizeRequest } from './middlewares/sanitize.js';
+import { buildApiRouter } from './routes/index.js';
+import { razorpayWebhook } from './controllers/paymentController.js';
+import { getAllowedOrigins } from './utils/origins.js';
 
 export const app = express();
 
-// Security middlewares
+// Behind Render/Vercel proxies: trust the first hop so req.ip and secure cookies behave.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Allows flexible SPA serving / dev tooling
+    contentSecurityPolicy: false, // API only; the SPA sets its own policy
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 
+const allowedOrigins = getAllowedOrigins();
 app.use(
   cors({
-    origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      // Allow same-origin / server-to-server requests without an Origin header (e.g. webhooks, curl).
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
 app.use(cookieParser());
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Apply general rate limit to all API routes in production
+/**
+ * Razorpay webhook: must receive the RAW body so the HMAC can be computed over the exact bytes.
+ * Mounted BEFORE express.json() so the JSON parser never touches it.
+ */
+app.post('/api/v1/payments/razorpay/webhook', webhookLimiter, express.raw({ type: '*/*', limit: '256kb' }), razorpayWebhook);
+app.post('/api/payments/razorpay/webhook', webhookLimiter, express.raw({ type: '*/*', limit: '256kb' }), razorpayWebhook);
+
+app.use(express.json({ limit: '200kb' }));
+app.use(express.urlencoded({ extended: false, limit: '200kb' }));
+app.use(sanitizeRequest);
+
 if (env.NODE_ENV === 'production') {
   app.use('/api', generalApiLimiter);
 }
 
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  res.status(200).json({
-    status: 'ok',
-    service: 'NightOwl API',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    database: dbStatus,
-    environment: env.NODE_ENV,
-  });
-});
+// Versioned API (+ unversioned alias for older clients)
+app.use('/api/v1', buildApiRouter());
+app.use('/api', buildApiRouter());
 
-// Mount modular API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/pools', itemRoutes);
-app.use('/api/pools', paymentRoutes);
-app.use('/api/pools', poolRoutes);
-
-// 404 Catch-all handler
 app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    error: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
+  res.status(404).json({ success: false, error: `Route not found: ${req.method} ${req.originalUrl}` });
 });
 
-// Centralized error handler
 app.use(errorHandler);

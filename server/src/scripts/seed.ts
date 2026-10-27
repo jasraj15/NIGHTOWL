@@ -5,6 +5,8 @@ import { Pool } from '../models/Pool.js';
 import { PoolItem } from '../models/PoolItem.js';
 import { PaymentRecord } from '../models/PaymentRecord.js';
 import { AuditEvent } from '../models/AuditEvent.js';
+import { Notification } from '../models/Notification.js';
+import { PaymentEvent } from '../models/PaymentEvent.js';
 import { calculateProportionalCostSplit } from '../services/costSplitService.js';
 
 async function seed() {
@@ -18,6 +20,8 @@ async function seed() {
     PoolItem.deleteMany({}),
     PaymentRecord.deleteMany({}),
     AuditEvent.deleteMany({}),
+    Notification.deleteMany({}),
+    PaymentEvent.deleteMany({}),
   ]);
 
   console.log('🧹 Cleaned existing database collections.');
@@ -30,6 +34,7 @@ async function seed() {
     hostel: 'Uniworld 1',
     roomNumber: 'Tower A - 304',
     isEmailVerified: true,
+    hostelSelected: true,
     role: 'student',
   });
 
@@ -40,6 +45,7 @@ async function seed() {
     hostel: 'Uniworld 1',
     roomNumber: 'Tower B - 212',
     isEmailVerified: true,
+    hostelSelected: true,
     role: 'student',
   });
 
@@ -50,6 +56,7 @@ async function seed() {
     hostel: 'Uniworld 2',
     roomNumber: 'Wing 1 - 405',
     isEmailVerified: true,
+    hostelSelected: true,
     role: 'student',
   });
 
@@ -60,6 +67,7 @@ async function seed() {
     hostel: 'Uniworld 2',
     roomNumber: 'Wing 2 - 110',
     isEmailVerified: true,
+    hostelSelected: true,
     role: 'student',
   });
 
@@ -134,6 +142,7 @@ async function seed() {
     notes: 'Locked! Host is currently placing the cart on Zepto.',
     creator: userPriya._id,
     status: 'LOCKED',
+    lockedAt: new Date(Date.now() - 3 * 60 * 1000),
     participants: [userPriya._id, userArjun._id],
     currentSubtotal: 420,
   });
@@ -186,6 +195,7 @@ async function seed() {
     notes: 'Order placed! Estimated arrival in 12 mins. Pay via UPI.',
     creator: userRohit._id,
     status: 'ORDERED',
+    lockedAt: new Date(Date.now() - 12 * 60 * 1000),
     participants: [userRohit._id, userAnanya._id],
     currentSubtotal: 380,
     finalPayableAmount: 410,
@@ -233,7 +243,9 @@ async function seed() {
       itemSubtotal: s.itemSubtotal,
       allocatedFee: s.allocatedFee,
       totalDue: s.totalDue,
-      paymentStatus: isOwner ? 'CONFIRMED' : 'SUBMITTED',
+      paymentStatus: isOwner ? 'PAID' : 'PROCESSING',
+      paymentMethod: 'MANUAL_UPI',
+      paidAt: isOwner ? new Date(Date.now() - 2 * 60 * 1000) : undefined,
       paymentReference: isOwner ? 'OWNER_PAID_BILL' : 'UPI/409823194821',
       submittedAt: new Date(Date.now() - 3 * 60 * 1000),
       reviewedAt: isOwner ? new Date(Date.now() - 2 * 60 * 1000) : undefined,

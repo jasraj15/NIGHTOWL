@@ -5,7 +5,6 @@ import {
   verifyOtpHandler,
   resendOtp,
   getMe,
-  updateProfile,
   logout,
 } from '../controllers/authController.js';
 import { requireAuth } from '../middlewares/auth.js';
@@ -19,7 +18,6 @@ router.post('/verify-otp', authRateLimiter, verifyOtpHandler);
 router.post('/resend-otp', otpRequestLimiter, resendOtp);
 
 router.get('/me', requireAuth, getMe);
-router.patch('/profile', requireAuth, updateProfile);
 router.post('/logout', requireAuth, logout);
 
 export default router;

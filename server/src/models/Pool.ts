@@ -31,9 +31,15 @@ export interface IPool extends Document {
   currentSubtotal: number;
   participants: Types.ObjectId[];
 
+  lockedAt?: Date;
+  reopenedAt?: Date;
+  extensionCount: number;
   orderPlacedAt?: Date;
   deliveredAt?: Date;
   cancelledAt?: Date;
+  expiredAt?: Date;
+  /** Owner explicitly confirmed the retailer's real minimum/delivery requirements before proceeding below target. */
+  proceedBelowTargetConfirmed?: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -151,9 +157,14 @@ const PoolSchema = new Schema<IPool>(
         ref: 'User',
       },
     ],
+    lockedAt: Date,
+    reopenedAt: Date,
+    extensionCount: { type: Number, default: 0, min: 0 },
     orderPlacedAt: Date,
     deliveredAt: Date,
     cancelledAt: Date,
+    expiredAt: Date,
+    proceedBelowTargetConfirmed: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -164,5 +175,7 @@ const PoolSchema = new Schema<IPool>(
 PoolSchema.index({ hostel: 1, status: 1, createdAt: -1 });
 PoolSchema.index({ retailer: 1, status: 1 });
 PoolSchema.index({ participants: 1 });
+PoolSchema.index({ status: 1, closingTime: 1 });
+PoolSchema.index({ creator: 1, status: 1, createdAt: -1 });
 
 export const Pool: Model<IPool> = mongoose.model<IPool>('Pool', PoolSchema);

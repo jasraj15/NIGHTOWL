@@ -72,3 +72,7 @@ build/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# local job runner artefacts & staging
+.ci/
+_to_delete/

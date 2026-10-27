@@ -1,40 +1,49 @@
 import { Router } from 'express';
 import {
   getPools,
+  getRecommendedPools,
   createPool,
   getPoolById,
   joinPool,
   leavePool,
   lockPool,
+  reopenPool,
+  extendPool,
   confirmOrderPlaced,
   markDelivered,
   cancelPool,
+  getMyOrders,
   getMyPoolHistory,
+  getDuplicateDraft,
+  reportPool,
 } from '../controllers/poolController.js';
 import { requireAuth, requireVerifiedCollegeEmail } from '../middlewares/auth.js';
 
 const router = Router();
 
-// Public discovery of open pools (or for authenticated users)
+// Everything about pools requires a verified student session (discovery included).
+router.use(requireAuth, requireVerifiedCollegeEmail);
+
 router.get('/', getPools);
+router.get('/recommended', getRecommendedPools);
+router.get('/orders/mine', getMyOrders);
+router.get('/history/my', getMyPoolHistory);
+router.post('/', createPool);
 
-// User's own pool history
-router.get('/history/my', requireAuth, getMyPoolHistory);
-
-// Single pool details
 router.get('/:id', getPoolById);
+router.get('/:id/duplicate-draft', getDuplicateDraft);
 
-// Pool creation (requires verified college email)
-router.post('/', requireAuth, requireVerifiedCollegeEmail, createPool);
+router.post('/:id/join', joinPool);
+router.post('/:id/leave', leavePool);
+router.post('/:id/report', reportPool);
 
-// Pool membership
-router.post('/:id/join', requireAuth, requireVerifiedCollegeEmail, joinPool);
-router.post('/:id/leave', requireAuth, leavePool);
-
-// Pool lifecycle (Owner only)
-router.post('/:id/lock', requireAuth, lockPool);
-router.post('/:id/order-placed', requireAuth, confirmOrderPlaced);
-router.post('/:id/deliver', requireAuth, markDelivered);
-router.post('/:id/cancel', requireAuth, cancelPool);
+// Lifecycle (owner only — enforced in controllers)
+router.post('/:id/lock', lockPool);
+router.post('/:id/reopen', reopenPool);
+router.post('/:id/extend', extendPool);
+router.post('/:id/order-placed', confirmOrderPlaced);
+router.post('/:id/complete', confirmOrderPlaced);
+router.post('/:id/deliver', markDelivered);
+router.post('/:id/cancel', cancelPool);
 
 export default router;

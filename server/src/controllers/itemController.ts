@@ -1,11 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
-import { Pool } from '../models/Pool.js';
+import { Pool, IPool } from '../models/Pool.js';
 import { PoolItem } from '../models/PoolItem.js';
 import { AuditEvent } from '../models/AuditEvent.js';
 import { addItemSchema, updateItemSchema } from '../validators/itemSchemas.js';
 import { checkAndExpirePool } from '../services/poolExpiryService.js';
-import { broadcastPoolUpdate } from '../services/socketService.js';
+import { broadcastPoolUpdate, SOCKET_EVENTS } from '../services/socketService.js';
+import { PUBLIC_USER_FIELDS } from '../models/User.js';
+
+/**
+ * Atomically apply a delta to the cached pool subtotal ($inc) so concurrent cart edits
+ * never overwrite each other, then refresh the in-memory document with the rounded value.
+ */
+async function applySubtotalDelta(pool: IPool, delta: number): Promise<void> {
+  const updated = await Pool.findByIdAndUpdate(
+    pool._id,
+    { $inc: { currentSubtotal: Math.round(delta * 100) / 100 } },
+    { new: true, select: 'currentSubtotal' }
+  ).lean();
+  pool.currentSubtotal = Math.round(((updated?.currentSubtotal ?? 0) as number) * 100) / 100;
+}
+
+function totalPayload(pool: { _id: any; currentSubtotal: number; targetAmount: number }) {
+  return {
+    poolId: pool._id.toString(),
+    currentSubtotal: pool.currentSubtotal,
+    remainingAmount: Math.max(0, Math.round((pool.targetAmount - pool.currentSubtotal) * 100) / 100),
+    progressPercent: Math.min(100, Math.round((pool.currentSubtotal / pool.targetAmount) * 100)),
+  };
+}
 
 export async function addItem(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -29,17 +51,15 @@ export async function addItem(req: Request, res: Response, next: NextFunction): 
       return;
     }
 
-    // Check if user is a participant; if not, add them if space remains
+    // Membership is explicit: users must join (and confirm the delivery location) first.
     const isParticipant = pool.participants.some((p) => p.toString() === userId.toString());
     if (!isParticipant) {
-      if (pool.participants.length >= pool.participantLimit) {
-        res.status(400).json({
-          success: false,
-          error: `Pool participant limit of ${pool.participantLimit} reached.`,
-        });
-        return;
-      }
-      pool.participants.push(new mongoose.Types.ObjectId(userId));
+      res.status(403).json({
+        success: false,
+        error: 'Join the pool before adding items.',
+        code: 'NOT_A_PARTICIPANT',
+      });
+      return;
     }
 
     const newItemSubtotal = Math.round(data.quantity * data.unitPrice * 100) / 100;
@@ -68,12 +88,7 @@ export async function addItem(req: Request, res: Response, next: NextFunction): 
       note: data.note,
     });
 
-    // Recalculate pool subtotal
-    const allItems = await PoolItem.find({ poolId: pool._id });
-    pool.currentSubtotal = Math.round(
-      allItems.reduce((sum, it) => sum + it.itemSubtotal, 0) * 100
-    ) / 100;
-    await pool.save();
+    await applySubtotalDelta(pool, newItemSubtotal);
 
     await AuditEvent.create({
       poolId: pool._id,
@@ -90,7 +105,7 @@ export async function addItem(req: Request, res: Response, next: NextFunction): 
 
     const populatedItem = await PoolItem.findById(item._id).populate(
       'userId',
-      'fullName email hostel'
+      PUBLIC_USER_FIELDS
     );
 
     broadcastPoolUpdate(pool._id.toString(), 'cart:item_added', {
@@ -100,6 +115,8 @@ export async function addItem(req: Request, res: Response, next: NextFunction): 
       remainingAmount: Math.max(0, pool.targetAmount - pool.currentSubtotal),
       progressPercent: Math.min(100, Math.round((pool.currentSubtotal / pool.targetAmount) * 100)),
     });
+
+    broadcastPoolUpdate(pool._id.toString(), SOCKET_EVENTS.TOTAL_CHANGED, totalPayload(pool));
 
     res.status(201).json({
       success: true,
@@ -171,18 +188,15 @@ export async function updateItem(req: Request, res: Response, next: NextFunction
       }
     }
 
+    const previousSubtotal = item.itemSubtotal;
     item.quantity = updatedQty;
     item.unitPrice = updatedPrice;
     item.itemSubtotal = newItemSubtotal;
+    if (data.name !== undefined) item.name = data.name;
     if (data.note !== undefined) item.note = data.note;
     await item.save();
 
-    // Recalculate pool subtotal
-    const allItems = await PoolItem.find({ poolId: pool._id });
-    pool.currentSubtotal = Math.round(
-      allItems.reduce((sum, it) => sum + it.itemSubtotal, 0) * 100
-    ) / 100;
-    await pool.save();
+    await applySubtotalDelta(pool, newItemSubtotal - previousSubtotal);
 
     await AuditEvent.create({
       poolId: pool._id,
@@ -200,7 +214,7 @@ export async function updateItem(req: Request, res: Response, next: NextFunction
 
     const populatedItem = await PoolItem.findById(item._id).populate(
       'userId',
-      'fullName email hostel'
+      PUBLIC_USER_FIELDS
     );
 
     broadcastPoolUpdate(pool._id.toString(), 'cart:item_updated', {
@@ -210,6 +224,8 @@ export async function updateItem(req: Request, res: Response, next: NextFunction
       remainingAmount: Math.max(0, pool.targetAmount - pool.currentSubtotal),
       progressPercent: Math.min(100, Math.round((pool.currentSubtotal / pool.targetAmount) * 100)),
     });
+
+    broadcastPoolUpdate(pool._id.toString(), SOCKET_EVENTS.TOTAL_CHANGED, totalPayload(pool));
 
     res.status(200).json({
       success: true,
@@ -263,12 +279,7 @@ export async function deleteItem(req: Request, res: Response, next: NextFunction
 
     await PoolItem.deleteOne({ _id: item._id });
 
-    // Recalculate pool subtotal
-    const allItems = await PoolItem.find({ poolId: pool._id });
-    pool.currentSubtotal = Math.round(
-      allItems.reduce((sum, it) => sum + it.itemSubtotal, 0) * 100
-    ) / 100;
-    await pool.save();
+    await applySubtotalDelta(pool, -item.itemSubtotal);
 
     await AuditEvent.create({
       poolId: pool._id,
@@ -289,6 +300,8 @@ export async function deleteItem(req: Request, res: Response, next: NextFunction
       remainingAmount: Math.max(0, pool.targetAmount - pool.currentSubtotal),
       progressPercent: Math.min(100, Math.round((pool.currentSubtotal / pool.targetAmount) * 100)),
     });
+
+    broadcastPoolUpdate(pool._id.toString(), SOCKET_EVENTS.TOTAL_CHANGED, totalPayload(pool));
 
     res.status(200).json({
       success: true,

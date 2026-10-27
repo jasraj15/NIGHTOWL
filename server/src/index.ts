@@ -25,7 +25,7 @@ async function bootstrap() {
       console.log(`🦉 NightOwl Backend Server Started`);
       console.log(`🌐 Port: ${env.PORT}`);
       console.log(`📡 Environment: ${env.NODE_ENV}`);
-      console.log(`🔗 Health check: http://localhost:${env.PORT}/api/health`);
+      console.log(`🔗 Health check: http://localhost:${env.PORT}/api/v1/health`);
       console.log(`==============================================\n`);
     });
 

@@ -85,9 +85,10 @@ export async function createAndSendOtp(
     }
   }
 
-  // If in development or test, print debug OTP for seamless developer experience
+  // Development/test only: surface the code so the flow can be exercised without an email provider.
+  // In production the OTP is NEVER logged or returned.
   let debugOtp: string | undefined = undefined;
-  if (env.NODE_ENV !== 'production' || !sentViaResend) {
+  if (env.NODE_ENV !== 'production' && !sentViaResend) {
     console.log(`\n========================================`);
     console.log(`🦉 [NightOwl OTP DEV Fallback]`);
     console.log(`To: ${normalizedEmail}`);
@@ -103,8 +104,10 @@ export async function createAndSendOtp(
     resendAfter,
     message: sentViaResend
       ? `Verification code sent to ${normalizedEmail}`
-      : `Verification code generated. (Check server logs in development mode)`,
-    debugOtp: env.NODE_ENV === 'test' ? rawOtp : undefined,
+      : env.NODE_ENV === 'production'
+      ? 'We could not send the email right now. Please try again in a minute.'
+      : 'Verification code generated (development mode: see server console).',
+    debugOtp,
   };
 }
 

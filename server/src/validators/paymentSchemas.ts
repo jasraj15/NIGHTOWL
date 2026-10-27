@@ -9,8 +9,14 @@ export const submitPaymentSchema = z.object({
 });
 
 export const reviewPaymentSchema = z.object({
-  status: z.enum(['CONFIRMED', 'REJECTED'], {
-    errorMap: () => ({ message: 'Status must be either CONFIRMED or REJECTED' }),
+  status: z.enum(['PAID', 'FAILED'], {
+    errorMap: () => ({ message: 'Status must be either PAID or FAILED' }),
   }),
   reviewNote: z.string().trim().max(200).optional(),
+});
+
+export const verifyRazorpayPaymentSchema = z.object({
+  razorpay_order_id: z.string().trim().regex(/^order_[A-Za-z0-9]+$/, 'Invalid order id'),
+  razorpay_payment_id: z.string().trim().regex(/^pay_[A-Za-z0-9]+$/, 'Invalid payment id'),
+  razorpay_signature: z.string().trim().regex(/^[a-f0-9]{64}$/i, 'Invalid signature format'),
 });

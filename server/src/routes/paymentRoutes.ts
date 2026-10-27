@@ -1,18 +1,28 @@
 import { Router } from 'express';
-import { submitPaymentReference, reviewPayment } from '../controllers/paymentController.js';
+import {
+  getPaymentConfig,
+  getMyContribution,
+  createPaymentOrder,
+  verifyPaymentCheckout,
+  submitPaymentReference,
+  reviewPayment,
+  getMyPaymentHistory,
+} from '../controllers/paymentController.js';
 import { requireAuth, requireVerifiedCollegeEmail } from '../middlewares/auth.js';
+import { paymentActionLimiter } from '../middlewares/rateLimiter.js';
 
-const router = Router();
+/** Routes mounted under /pools/:poolId/payments */
+export const poolPaymentRoutes = Router();
 
-// Participant submits their UPI reference
-router.post('/:poolId/payment', requireAuth, requireVerifiedCollegeEmail, submitPaymentReference);
+poolPaymentRoutes.get('/:poolId/payments/me', requireAuth, requireVerifiedCollegeEmail, getMyContribution);
+poolPaymentRoutes.post('/:poolId/payments/razorpay/order', requireAuth, requireVerifiedCollegeEmail, paymentActionLimiter, createPaymentOrder);
+poolPaymentRoutes.post('/:poolId/payments/razorpay/verify', requireAuth, requireVerifiedCollegeEmail, paymentActionLimiter, verifyPaymentCheckout);
+poolPaymentRoutes.post('/:poolId/payments/manual', requireAuth, requireVerifiedCollegeEmail, paymentActionLimiter, submitPaymentReference);
+poolPaymentRoutes.post('/:poolId/payments/:paymentId/review', requireAuth, requireVerifiedCollegeEmail, reviewPayment);
 
-// Owner confirms or rejects participant's payment
-router.post(
-  '/:poolId/payment/:paymentId/review',
-  requireAuth,
-  requireVerifiedCollegeEmail,
-  reviewPayment
-);
+/** Routes mounted under /payments (webhook is mounted separately with a raw body parser). */
+export const paymentRoutes = Router();
+paymentRoutes.get('/config', getPaymentConfig);
+paymentRoutes.get('/history', requireAuth, getMyPaymentHistory);
 
-export default router;
+export default paymentRoutes;

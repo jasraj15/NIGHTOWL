@@ -19,6 +19,7 @@ export const addItemSchema = z.object({
 });
 
 export const updateItemSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
   quantity: z
     .number({ invalid_type_error: 'Quantity must be a number' })
     .int('Quantity must be an integer')
