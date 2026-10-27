@@ -8,7 +8,7 @@ export const OwlMark: React.FC<{ className?: string }> = ({ className }) => (
 
 export const Logo: React.FC<{ to?: string; compact?: boolean; className?: string }> = ({ to = '/', compact, className }) => (
   <Link to={to} className={cx('group inline-flex items-center gap-2.5', className)} aria-label="NightOwl home">
-    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-gradient-to-br from-overlay to-base p-1.5 transition-colors group-hover:border-lime/40">
+    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-gradient-to-br from-overlay to-canvas p-1.5 transition-colors group-hover:border-lime/40">
       <OwlMark className="h-full w-full" />
     </span>
     {!compact && (

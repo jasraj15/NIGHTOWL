@@ -175,7 +175,7 @@ export const AuthPage: React.FC = () => {
             </Alert>
           )}
           {debugOtp && step === 'otp' && (
-            <div className="mb-4 flex items-center justify-between rounded-xl border border-lime/40 bg-base px-4 py-3 text-xs">
+            <div className="mb-4 flex items-center justify-between rounded-xl border border-lime/40 bg-canvas px-4 py-3 text-xs">
               <span className="font-semibold text-muted">Dev mode — code printed by the server:</span>
               <button type="button" onClick={() => setOtp(debugOtp)} className="font-mono text-base font-extrabold text-lime hover:underline">
                 {debugOtp}

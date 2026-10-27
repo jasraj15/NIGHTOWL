@@ -28,7 +28,7 @@ const ScrollToTop: React.FC = () => {
 };
 
 const FullScreenLoader: React.FC = () => (
-  <div className="flex min-h-dvh items-center justify-center bg-base" role="status" aria-live="polite">
+  <div className="flex min-h-dvh items-center justify-center bg-canvas" role="status" aria-live="polite">
     <div className="flex flex-col items-center gap-3">
       <OwlMark className="h-14 w-14 animate-pulse" />
       <p className="text-sm text-muted">Waking NightOwl…</p>

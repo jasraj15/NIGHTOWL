@@ -91,7 +91,7 @@ export const Progress: React.FC<{ value: number; className?: string; label?: str
   const v = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div
-      className={cx('h-2 w-full overflow-hidden rounded-full border border-line bg-base', className)}
+      className={cx('h-2 w-full overflow-hidden rounded-full border border-line bg-canvas', className)}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}

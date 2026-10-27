@@ -42,7 +42,7 @@ export const PoolCard: React.FC<PoolCardProps> = ({ pool, reasons, highlight }) 
         <span className="text-faint">· by {userName(pool.creator).split(' ')[0]}</span>
       </p>
 
-      <div className="mt-4 rounded-xl border border-line bg-base/60 p-3">
+      <div className="mt-4 rounded-xl border border-line bg-canvas/60 p-3">
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-muted">Cart total</span>
           <span className="font-bold text-fg">

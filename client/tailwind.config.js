@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: token('c-base'),
+        canvas: token('c-base'),
         surface: token('c-surface'),
         raised: token('c-raised'),
         overlay: token('c-overlay'),
@@ -31,6 +31,7 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        display: ['Fraunces', 'Georgia', 'serif'],
       },
       borderRadius: {
         xl2: '1.25rem',
@@ -51,11 +52,16 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 260ms ease-out both',
         'fade-in': 'fade-in 200ms ease-out both',
         shimmer: 'shimmer 1.6s infinite',
+        marquee: 'marquee 28s linear infinite',
       },
     },
   },
